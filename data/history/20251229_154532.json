@@ -1,0 +1,31 @@
+{
+  "inputs": {
+    "starting_balance": 38500.0,
+    "horizon_months": 6,
+    "granularity": "weekly",
+    "safety_threshold": 10000.0,
+    "credit_line_total": 50000.0,
+    "credit_line_used": 10000.0,
+    "interest_rate": 6.5,
+    "conservative_mode": false,
+    "fixed_costs_monthly": 7200.0
+  },
+  "coverage_months": 9.3,
+  "confidence_level": "high",
+  "quality_metrics": {
+    "bank_transactions": 18,
+    "sales_invoices": 5,
+    "purchase_invoices": 5,
+    "coverage_days": 279,
+    "coverage_months": 9.3,
+    "parse_success_rate": 1.0,
+    "has_future_collections": true,
+    "has_future_payments": true,
+    "warnings_count": 1
+  },
+  "warnings": [
+    "⚠️ 13 fechas inválidas eliminadas"
+  ],
+  "cashflow_df": [
+    {
+      "period_start": 

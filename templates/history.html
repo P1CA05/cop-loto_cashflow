@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Historial - Copiloto de Supervivencia{% endblock %}
+
+{% block content %}
+<div class="history-page">
+    <div class="page-header">
+        <h2>📚 Historial de Análisis</h2>
+        <p>Todos tus análisis guardados. Haz clic para reabrir cualquiera.</p>
+    </div>
+
+    {% if snapshots %}
+    <div class="table-container">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Confianza</th>
+                    <th>Cobertura</th>
+                    <th>Riesgo</th>
+                    <th>Saldo Mín.</th>
+                    <th>Capital Necesario</th>
+                    <th>Brecha</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for snapshot in snapshots %}
+                <tr>
+                    <td>{{ snapshot.created_at[:16].replace('T', ' ') }}</td>
+                    <td>
+                        <span class="badge confidence-{{ snapshot.confidence_level }}">
+                            {{ snapshot.confidence_level | upper }}
+                        </span>
+                    </td>
+                    <td>{{ "%.1f" | format(snapshot.coverage_months) }}m</td>
+                    <td>
+                        <span class="badge risk-{{ snapshot.risk_level }}">
+                            {{ snapshot.risk_level | upper }}
+                        </span>
+                    </td>
+                    <td class="{% if snapshot.min_balance < 0 %}negative{% endif %}">
+                        {{ "%.0f" | format(snapshot.min_balance) }}€
+                    </td>
+                    <td>{{ "%.0f" | format(snapshot.capital_needed) }}€</td>
+                    <td class="{% if snapshot.credit_gap > 0 %}negative{% endif %}">
+                        {{ "%.0f" | format(snapshot.credit_gap) }}€
+                    </td>
+                    <td>
+                        <a href="{{ url_for('results', snapshot_id=snapshot.snapshot_id) }}" 
+                           class="btn btn-small">Ver</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>📭 No hay análisis guardados todavía.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Crear Primer Análisis</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Registro - Copiloto Financiero{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <h2>📝 Crear Cuenta</h2>
+        <p class="login-subtitle">Copiloto de Supervivencia Financiera</p>
+        
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="form-group">
+                <label for="username">Nombre de usuario: *</label>
+                <input type="text" id="username" name="username" required autofocus placeholder="usuario123">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email: *</label>
+                <input type="email" id="email" name="email" required placeholder="tu@email.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="company_name">Nombre de tu empresa: *</label>
+                <input type="text" id="company_name" name="company_name" required placeholder="Mi Empresa S.L.">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Contraseña: *</label>
+                <input type="password" id="password" name="password" required minlength="6" placeholder="Mínimo 6 caracteres">
+            </div>
+            
+            <div class="form-group">
+                <label for="password_confirm">Confirmar contraseña: *</label>
+                <input type="password" id="password_confirm" name="password_confirm" required minlength="6">
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">Crear Cuenta</button>
+        </form>
+        
+        <div class="login-footer">
+            <p>¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión aquí</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.login-container {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.login-box {
+    background: white;
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    max-width: 500px;
+    width: 100%;
+}
+
+.login-box h2 {
+    text-align: center;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.login-subtitle {
+    text-align: center;
+    color: #666;
+    margin-bottom: 2rem;
+    font-size: 0.9rem;
+}
+
+.login-box .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.login-box label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+.login-box input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-block {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+}
+
+.login-footer {
+    margin-top: 2rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.login-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-footer a:hover {
+    text-decoration: underline;
+}
+</style>
+{% endblock %}

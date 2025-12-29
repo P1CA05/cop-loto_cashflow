@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Ayuda - Copiloto de Supervivencia{% endblock %}
+
+{% block content %}
+<div class="help-page">
+    <div class="page-header">
+        <h2>❓ Ayuda y Guía de Uso</h2>
+    </div>
+
+    <div class="help-section">
+        <h3>🚀 Cómo Funciona</h3>
+        <p>El <strong>Copiloto de Supervivencia Financiera</strong> analiza tus datos financieros para:</p>
+        <ol>
+            <li>Calcular una proyección de caja fiable (cashflow determinista)</li>
+            <li>Determinar cuánto capital necesitas para sobrevivir X meses</li>
+            <li>Distinguir entre capital estructural y financiación puente</li>
+            <li>Evaluar si tu línea de crédito es suficiente</li>
+            <li>Generar escenarios "qué pasa si..."</li>
+            <li>Crear alertas accionables y plan de acción priorizado</li>
+            <li>Producir informe ejecutivo interpretado por IA (con anti-alucinación)</li>
+        </ol>
+        <p><strong>Principio clave:</strong> Python calcula números, la IA solo interpreta. Cero alucinaciones en cifras.</p>
+    </div>
+
+    <div class="help-section" id="templates">
+        <h3>📁 Formatos de Archivos</h3>
+        
+        <h4>1. Extracto Bancario (OBLIGATORIO)</h4>
+        <p>CSV o Excel con columnas:</p>
+        <ul>
+            <li><code>Fecha</code> o <code>Date</code>: fecha de la transacción (DD/MM/YYYY o YYYY-MM-DD)</li>
+            <li><code>Importe</code> o <code>Amount</code>: importe (positivo=ingreso, negativo=pago)</li>
+            <li>O bien: <code>Débito</code> y <code>Crédito</code> en columnas separadas</li>
+            <li><code>Concepto</code> o <code>Description</code>: descripción (opcional)</li>
+        </ul>
+        <p><strong>Ejemplo:</strong></p>
+        <pre>
+Fecha,Importe,Concepto
+15/01/2025,1500.00,Cobro cliente ABC
+18/01/2025,-850.50,Pago proveedor XYZ
+20/01/2025,3200.00,Transferencia cliente DEF
+        </pre>
+
+        <h4>2. Facturas Emitidas (OPCIONAL pero recomendado)</h4>
+        <p>CSV o Excel con columnas:</p>
+        <ul>
+            <li><code>ID</code> o <code>Número</code>: identificador de factura</li>
+            <li><code>Cliente</code> o <code>Customer</code>: nombre del cliente</li>
+            <li><code>Fecha emisión</code> o <code>Issue Date</code>: fecha de emisión</li>
+            <li><code>Fecha vencimiento</code> o <code>Due Date</code>: fecha de vencimiento</li>
+            <li><code>Importe</code> o <code>Amount</code>: importe total</li>
+            <li><code>Estado</code> o <code>Status</code>: paid/unpaid/overdue (opcional)</li>
+        </ul>
+        <p><strong>Ejemplo:</strong></p>
+        <pre>
+ID,Cliente,Fecha emisión,Fecha vencimiento,Importe,Estado
+F001,Empresa A,10/01/2025,10/02/2025,2500.00,unpaid
+F002,Empresa B,15/01/2025,15/03/2025,4800.00,unpaid
+        </pre>
+
+        <h4>3. Facturas Recibidas (OPCIONAL)</h4>
+        <p>Similar a Facturas Emitidas, pero con <code>Proveedor</code> o <code>Supplier</code> en lugar de Cliente.</p>
+
+        <h4>📥 Descargar Plantillas</h4>
+        <p>Las plantillas CSV están disponibles en <code>exports/templates/</code> en el repositorio.</p>
+    </div>
+
+    <div class="help-section">
+        <h3>🎯 Consejos para Mejores Resultados</h3>
+        <ul>
+            <li><strong>Extracto completo:</strong> Sube al menos 3-6 meses de movimientos bancarios</li>
+            <li><strong>Facturas pendientes:</strong> Incluye todas las facturas emitidas y recibidas no pagadas</li>
+            <li><strong>Gastos fijos:</strong> Proporciona la cifra mensual de costes recurrentes</li>
+            <li><strong>Línea de crédito:</strong> Incluye esta info para análisis más preciso</li>
+            <li><strong>Modo conservador:</strong> Actívalo si tus clientes suelen pagar con retraso</li>
+        </ul>
+    </div>
+
+    <div class="help-section">
+        <h3>📊 Interpretando los Resultados</h3>
+        
+        <h4>Nivel de Confianza</h4>
+        <ul>
+            <li><strong>Alta:</strong> Datos completos (extracto + facturas + 6+ meses)</li>
+            <li><strong>Media:</strong> Datos parciales o cobertura 3-6 meses</li>
+            <li><strong>Baja:</strong> Datos limitados o < 3 meses</li>
+        </ul>
+
+        <h4>Nivel de Riesgo</h4>
+        <ul>
+            <li><strong>High:</strong> Balance proyectado caerá por debajo de 0€</li>
+            <li><strong>Medium:</strong> Balance por debajo del umbral de seguridad</li>
+            <li><strong>Low:</strong> Balance saludable durante todo el horizonte</li>
+        </ul>
+
+        <h4>Capital Necesario</h4>
+        <ul>
+            <li><strong>Capital Propio:</strong> Buffer estructural (colchón mínimo recomendado)</li>
+            <li><strong>Financiación Puente:</strong> Crédito temporal para cubrir picos de déficit</li>
+            <li><strong>Brecha:</strong> Dinero adicional necesario si tu línea de crédito no es suficiente</li>
+        </ul>
+    </div>
+
+    <div class="help-section">
+        <h3>🔒 Privacidad y Seguridad</h3>
+        <p>Tus datos se procesan <strong>localmente</strong> en tu servidor. No se envían a servicios externos excepto:</p>
+        <ul>
+            <li>API de IA (Claude/OpenAI) SOLO para generar interpretación del informe (sin datos bancarios crudos)</li>
+            <li>Puedes usar el modo "rules-based" sin API key para máxima privacidad</li>
+        </ul>
+        <p>Los análisis se guardan en <code>data/history/</code> en JSON.</p>
+    </div>
+
+    <div class="help-section">
+        <h3>🐛 Problemas Comunes</h3>
+        
+        <h4>Error "Columna de fecha no encontrada"</h4>
+        <p>Asegúrate de que tu CSV tiene una columna llamada "Fecha" o "Date" (no sensible a mayúsculas).</p>
+
+        <h4>Alertas "filas inválidas eliminadas"</h4>
+        <p>Normal. El parser elimina filas con fechas o importes vacíos. Revisa tu archivo si pierdes muchas filas.</p>
+
+        <h4>Informe "rules-based" en lugar de IA</h4>
+        <p>No se encontró API key. Configura <code>ANTHROPIC_API_KEY</code> o <code>OPENAI_API_KEY</code> en variables de entorno.</p>
+
+        <h4>Escenario conservador "limitado"</h4>
+        <p>No hay datos de cobros futuros (facturas emitidas). El escenario conservador necesita facturas pendientes.</p>
+    </div>
+
+    <div class="help-section">
+        <h3>📞 Soporte</h3>
+        <p>Para bugs o sugerencias, revisa el <code>README.md</code> del repositorio.</p>
+    </div>
+
+    <div class="help-actions">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">🚀 Comenzar Análisis</a>
+    </div>
+</div>
+{% endblock %}

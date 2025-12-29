@@ -1,0 +1,400 @@
+{% extends "base.html" %}
+
+{% block title %}Resultados - Copiloto de Supervivencia{% endblock %}
+
+{% block content %}
+<div class="results-page">
+    
+    <!-- Header with Confidence -->
+    <div class="results-header">
+        <h2>📊 Análisis de Supervivencia Completado</h2>
+        <div class="confidence-badge">
+            <div class="badge confidence-{{ snapshot.confidence_level }}">
+                Confianza: {{ snapshot.confidence_level | upper }}
+            </div>
+            <div class="coverage-info">
+                Cobertura: {{ "%.1f" | format(snapshot.coverage_months) }} meses
+            </div>
+        </div>
+        <p class="analysis-date">Generado: {{ snapshot.created_at }}</p>
+    </div>
+
+    <!-- Data Limitations Section -->
+    <div class="limitations-section">
+        <h4>📋 Alcance y Limitaciones de Este Análisis</h4>
+        <div class="limitations-grid">
+            <div class="limitation-item">
+                <strong>Cobertura de datos:</strong>
+                <span>{{ "%.1f" | format(snapshot.coverage_months) }} meses de extracto bancario</span>
+                {% if snapshot.coverage_months < 3 %}
+                    <p class="limitation-note">⚠️ Con menos de 3 meses no podemos identificar patrones estacionales ni tendencias fiables.</p>
+                {% elif snapshot.coverage_months < 6 %}
+                    <p class="limitation-note">ℹ️ Con 3-6 meses tenemos una vista parcial. Recomendamos al menos 6 meses para mayor precisión.</p>
+                {% else %}
+                    <p class="limitation-note positive">✅ Cobertura suficiente para identificar patrones y tendencias.</p>
+                {% endif %}
+            </div>
+            
+            <div class="limitation-item">
+                <strong>Datos futuros:</strong>
+                {% if snapshot.quality_metrics.has_future_collections or snapshot.quality_metrics.has_future_payments %}
+                    <span>✅ Incluye facturas pendientes</span>
+                    <p class="limitation-note positive">Los escenarios conservador y optimista son más precisos.</p>
+                {% else %}
+                    <span>⚠️ Sin facturas pendientes</span>
+                    <p class="limitation-note">Los escenarios futuros se basan solo en histórico. Sube facturas pendientes para mayor precisión.</p>
+                {% endif %}
+            </div>
+            
+            <div class="limitation-item">
+                <strong>Nivel de confianza:</strong>
+                <span class="confidence-{{ snapshot.confidence_level }}">{{ snapshot.confidence_level | upper }}</span>
+                {% if snapshot.confidence_level == 'low' %}
+                    <p class="limitation-note">⚠️ Recomendamos añadir más meses de extracto y facturas pendientes para mejorar precisión.</p>
+                {% elif snapshot.confidence_level == 'medium' %}
+                    <p class="limitation-note">ℹ️ Análisis útil pero mejorable. Considera añadir facturas pendientes para mayor detalle.</p>
+                {% else %}
+                    <p class="limitation-note positive">✅ Análisis fiable con datos suficientes.</p>
+                {% endif %}
+            </div>
+            
+            <div class="limitation-item">
+                <strong>Qué NO incluye este análisis:</strong>
+                <ul class="limitations-list">
+                    <li>Proyectos en negociación (solo incluye facturas emitidas)</li>
+                    <li>Cambios futuros en estructura de costes</li>
+                    <li>Eventos excepcionales no reflejados en datos</li>
+                    <li>Acceso automático a cuentas bancarias (datos manuales)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warnings (if any) -->
+    {% if snapshot.warnings %}
+    <div class="warnings-section">
+        <h4>⚠️ Avisos de Calidad de Datos</h4>
+        <ul class="warnings-list">
+            {% for warning in snapshot.warnings[:5] %}
+                <li>{{ warning }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Executive Summary Cards -->
+    <div class="summary-cards">
+        <div class="card card-balance">
+            <h4>💰 Saldo Mínimo</h4>
+            <div class="card-value {% if snapshot.kpis.min_balance < 0 %}negative{% endif %}">
+                {{ "%.2f" | format(snapshot.kpis.min_balance) }}€
+            </div>
+            <small>Fecha: {{ snapshot.kpis.min_balance_date }}</small>
+        </div>
+
+        <div class="card card-risk">
+            <h4>🚦 Nivel de Riesgo</h4>
+            <div class="card-value risk-{{ snapshot.kpis.risk_level }}">
+                {{ snapshot.kpis.risk_level | upper }}
+            </div>
+            <small>Runway: {{ snapshot.kpis.runway_weeks }} semanas</small>
+        </div>
+
+        <div class="card card-capital">
+            <h4>💵 Capital Necesario</h4>
+            <div class="card-value">
+                {{ "%.2f" | format(snapshot.survival.capital_total_needed) }}€
+            </div>
+            <small>Para {{ snapshot.inputs.horizon_months }} meses</small>
+        </div>
+
+        <div class="card card-bridge">
+            <h4>🌉 Financiación Puente</h4>
+            <div class="card-value">
+                {{ "%.2f" | format(snapshot.survival.financiacion_puente_needed) }}€
+            </div>
+            {% if snapshot.survival.credit_gap > 0 %}
+                <small class="negative">❌ Falta: {{ "%.2f" | format(snapshot.survival.credit_gap) }}€</small>
+            {% else %}
+                <small class="positive">✅ Suficiente</small>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Cashflow Table -->
+    <div class="section">
+        <h3>💹 Proyección de Cashflow</h3>
+        <div class="table-container">
+            <table class="cashflow-table">
+                <thead>
+                    <tr>
+                        <th>Período</th>
+                        <th>Ingresos</th>
+                        <th>Pagos</th>
+                        <th>Neto</th>
+                        <th>Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in cashflow[:20] %}
+                    <tr {% if row.balance < 0 %}class="negative-balance"{% elif row.below_safety %}class="warning-balance"{% endif %}>
+                        <td>{{ row.period_start[:10] }}</td>
+                        <td class="positive">+{{ "%.2f" | format(row.inflows) }}€</td>
+                        <td class="negative">-{{ "%.2f" | format(row.outflows) }}€</td>
+                        <td {% if row.net < 0 %}class="negative"{% else %}class="positive"{% endif %}>
+                            {{ "%.2f" | format(row.net) }}€
+                        </td>
+                        <td class="balance-cell">{{ "%.2f" | format(row.balance) }}€</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if cashflow|length > 20 %}
+            <p class="table-note">Mostrando primeros 20 períodos de {{ cashflow|length }} totales</p>
+        {% endif %}
+    </div>
+
+    <!-- Survival Analysis -->
+    <div class="section survival-section">
+        <h3>🎯 Análisis de Supervivencia ({{ snapshot.inputs.horizon_months }} meses)</h3>
+        <div class="survival-grid">
+            <div class="survival-item">
+                <strong>Déficit Proyectado:</strong>
+                <span class="{% if snapshot.survival.deficit > 0 %}negative{% endif %}">
+                    {{ "%.2f" | format(snapshot.survival.deficit) }}€
+                </span>
+            </div>
+            <div class="survival-item">
+                <strong>Buffer Estructural Recomendado:</strong>
+                <span>{{ "%.2f" | format(snapshot.survival.structural_buffer) }}€</span>
+            </div>
+            <div class="survival-item">
+                <strong>Capital Propio Sugerido:</strong>
+                <span>{{ "%.2f" | format(snapshot.survival.capital_propio_recommended) }}€</span>
+            </div>
+            <div class="survival-item">
+                <strong>Financiación Puente Necesaria:</strong>
+                <span>{{ "%.2f" | format(snapshot.survival.financiacion_puente_needed) }}€</span>
+            </div>
+            
+            {% if snapshot.survival.credit_line_total > 0 %}
+            <div class="survival-item">
+                <strong>Línea de Crédito Disponible:</strong>
+                <span>{{ "%.2f" | format(snapshot.survival.credit_available) }}€</span>
+            </div>
+            <div class="survival-item">
+                <strong>¿Suficiente?:</strong>
+                <span class="{% if snapshot.survival.credit_sufficient %}positive{% else %}negative{% endif %}">
+                    {{ "SÍ ✓" if snapshot.survival.credit_sufficient else "NO ✗" }}
+                </span>
+            </div>
+            
+            {% if snapshot.survival.credit_gap > 0 %}
+            <div class="survival-item gap-warning">
+                <strong>⚠️ BRECHA DE FINANCIACIÓN:</strong>
+                <span class="negative">{{ "%.2f" | format(snapshot.survival.credit_gap) }}€</span>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Scenarios Comparison -->
+    <div class="section">
+        <h3>🔮 Comparación de Escenarios</h3>
+        <div class="table-container">
+            <table class="scenarios-table">
+                <thead>
+                    <tr>
+                        <th>Escenario</th>
+                        <th>Saldo Mín.</th>
+                        <th>Riesgo</th>
+                        <th>Runway</th>
+                        <th>Capital Necesario</th>
+                        <th>Fin. Puente</th>
+                        <th>Brecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scenario in scenarios_comparison %}
+                    <tr>
+                        <td><strong>{{ scenario.scenario }}</strong></td>
+                        <td class="{% if scenario.min_balance < 0 %}negative{% endif %}">
+                            {{ "%.2f" | format(scenario.min_balance) }}€
+                        </td>
+                        <td class="risk-{{ scenario.risk_level }}">{{ scenario.risk_level | upper }}</td>
+                        <td>{{ scenario.runway_weeks }}s</td>
+                        <td>{{ "%.2f" | format(scenario.capital_needed) }}€</td>
+                        <td>{{ "%.2f" | format(scenario.bridge_financing) }}€</td>
+                        <td class="{% if scenario.credit_gap > 0 %}negative{% endif %}">
+                            {{ "%.2f" | format(scenario.credit_gap) }}€
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Alerts -->
+    <div class="section">
+        <h3>🚨 Alertas Detectadas</h3>
+        {% if snapshot.alerts %}
+            <div class="alerts-list">
+                {% for alert in snapshot.alerts %}
+                <div class="alert-item severity-{{ alert.severity }}">
+                    <div class="alert-header">
+                        <span class="alert-badge">{{ alert.severity | upper }}</span>
+                        <h4>{{ alert.title }}</h4>
+                    </div>
+                    <p class="alert-message">{{ alert.message }}</p>
+                    <p class="alert-evidence"><em>Evidencia: {{ alert.evidence }}</em></p>
+                    <p class="alert-action"><strong>→ Acción recomendada:</strong> {{ alert.recommended_action }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-alerts">✅ No se detectaron alertas críticas en este momento.</p>
+        {% endif %}
+    </div>
+
+    <!-- Action Plan -->
+    <div class="section">
+        <h3>📋 Plan de Acción Priorizado</h3>
+        
+        <div class="action-plan">
+            <div class="action-timeframe">
+                <h4>🔴 Inmediato (48 horas)</h4>
+                <ul>
+                    {% for action in snapshot.action_plan.immediate_48h %}
+                    <li>
+                        <strong>{{ action.action }}</strong>
+                        <br><small>Razón: {{ action.reason }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="action-timeframe">
+                <h4>🟡 Corto Plazo (7-14 días)</h4>
+                <ul>
+                    {% for action in snapshot.action_plan.short_term_7_14d %}
+                    <li>
+                        <strong>{{ action.action }}</strong>
+                        <br><small>Razón: {{ action.reason }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="action-timeframe">
+                <h4>🟢 Mediano Plazo (30-90 días)</h4>
+                <ul>
+                    {% for action in snapshot.action_plan.medium_term_30_90d %}
+                    <li>
+                        <strong>{{ action.action }}</strong>
+                        <br><small>Razón: {{ action.reason }}</small>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- LLM Report -->
+    <div class="section report-section">
+        <h3>📄 Informe Ejecutivo
+            {% if snapshot.report_source == 'llm' %}
+                <span class="badge badge-llm">Generado con IA</span>
+            {% else %}
+                <span class="badge badge-rules">Análisis Rules-Based</span>
+            {% endif %}
+        </h3>
+        <div class="report-content markdown-content">
+            {{ current_report | safe }}
+        </div>
+    </div>
+
+    <!-- Guided Questions (Post-Analysis) -->
+    <div class="section refine-section">
+        <h3>🎯 Refinar Recomendaciones</h3>
+        <p>Responde estas preguntas para personalizar el informe (sin cambiar números):</p>
+        
+        <form action="{{ url_for('refine', snapshot_id=snapshot.snapshot_id) }}" method="post" class="refine-form">
+            
+            <div class="form-group">
+                <label><strong>¿Cuáles son tus prioridades actuales? (selecciona todas las que apliquen)</strong></label>
+                <div class="checkbox-grid">
+                    <label><input type="checkbox" name="priorities" value="supervivencia"> Supervivencia inmediata</label>
+                    <label><input type="checkbox" name="priorities" value="crecimiento"> Crecimiento</label>
+                    <label><input type="checkbox" name="priorities" value="estabilidad"> Estabilidad financiera</label>
+                    <label><input type="checkbox" name="priorities" value="reducir_deuda"> Reducir deuda</label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><strong>¿Cómo ves el timing de tus cobros?</strong></label>
+                <select name="timing">
+                    <option value="">Selecciona...</option>
+                    <option value="puntual">Clientes pagan puntualmente</option>
+                    <option value="retrasos_leves">Retrasos leves habituales (+7-15 días)</option>
+                    <option value="retrasos_graves">Retrasos graves habituales (+30 días o más)</option>
+                    <option value="impredecible">Muy impredecible</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label><strong>¿Cuánto control sientes sobre tus flujos de caja?</strong></label>
+                <div class="radio-group">
+                    <label><input type="radio" name="control" value="alto"> Alto control</label>
+                    <label><input type="radio" name="control" value="medio"> Control medio</label>
+                    <label><input type="radio" name="control" value="bajo"> Bajo control</label>
+                </div>
+            </div>
+
+            {% if snapshot.kpis.risk_level == 'high' %}
+            <div class="form-group">
+                <label><strong>¿Hay cobros o pagos grandes próximos no reflejados en los datos?</strong></label>
+                <textarea name="upcoming_cashflows" rows="3" 
+                          placeholder="ej. 'Cobro de 20k€ esperado en 15 días, pago de impuestos de 10k€ en 30 días'"></textarea>
+            </div>
+            {% endif %}
+
+            {% if snapshot.survival.financiacion_puente_needed > 0 %}
+            <div class="form-group">
+                <label><strong>¿Puedes renegociar términos de pago con proveedores?</strong></label>
+                <div class="radio-group">
+                    <label><input type="radio" name="can_renegotiate" value="si"> Sí</label>
+                    <label><input type="radio" name="can_renegotiate" value="no"> No</label>
+                    <label><input type="radio" name="can_renegotiate" value="algunos"> Algunos</label>
+                </div>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-secondary">🔄 Actualizar Informe con Mis Respuestas</button>
+        </form>
+    </div>
+
+    <!-- Downloads -->
+    <div class="section downloads-section">
+        <h3>💾 Descargas</h3>
+        <div class="download-buttons">
+            <a href="{{ url_for('download', snapshot_id=snapshot.snapshot_id, file_type='txt') }}" 
+               class="btn btn-download">📄 Descargar Informe TXT</a>
+            <a href="{{ url_for('download', snapshot_id=snapshot.snapshot_id, file_type='md') }}" 
+               class="btn btn-download">📝 Descargar Informe MD</a>
+            <a href="{{ url_for('download', snapshot_id=snapshot.snapshot_id, file_type='csv_cashflow') }}" 
+               class="btn btn-download">📊 Descargar Cashflow CSV</a>
+            <a href="{{ url_for('download', snapshot_id=snapshot.snapshot_id, file_type='csv_scenarios') }}" 
+               class="btn btn-download">🔮 Descargar Escenarios CSV</a>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="section navigation-section">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">🆕 Nuevo Análisis</a>
+        <a href="{{ url_for('history') }}" class="btn btn-secondary">📚 Ver Historial</a>
+    </div>
+</div>
+{% endblock %}

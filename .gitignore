@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Flask
+instance/
+.webassets-cache
+
+# Environment variables
+.env
+.env.local
+
+# Data files (user uploads and history)
+data/history/*/
+data/users.json
+uploads/
+*.csv
+*.xlsx
+*.xls
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Exports
+exports/*.txt
+exports/*.md
+exports/*.csv
+
+# Keep directory structure but ignore contents
+!data/history/.gitkeep
+!exports/templates/.gitkeep
