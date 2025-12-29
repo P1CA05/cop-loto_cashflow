@@ -108,8 +108,17 @@
     document.getElementById('analysisForm').addEventListener('submit', function() {
         var btn = document.getElementById('btnAnalyze');
         btn.disabled = true;
-        btn.querySelector('.spinner-border').classList.remove('d-none');
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analizando...';
+        var spinner = btn.querySelector('.spinner-border');
+        if (spinner) {
+            spinner.classList.remove('d-none');
+        }
+        // Create elements safely
+        var spinnerSpan = document.createElement('span');
+        spinnerSpan.className = 'spinner-border spinner-border-sm me-2';
+        var textNode = document.createTextNode('Analizando...');
+        btn.innerHTML = '';
+        btn.appendChild(spinnerSpan);
+        btn.appendChild(textNode);
     });
 </script>
 {% endblock %}

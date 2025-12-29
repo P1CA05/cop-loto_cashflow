@@ -107,8 +107,8 @@
     
     if (cashflowData && cashflowData.length > 0) {
         const ctx = document.getElementById('cashflowChart').getContext('2d');
-        const labels = cashflowData.map(d => new Date(d.period_end).toLocaleDateString());
-        const dataBalance = cashflowData.map(d => d.balance);
+        const labels = cashflowData.map(d => d.period_end ? new Date(d.period_end).toLocaleDateString() : '');
+        const dataBalance = cashflowData.map(d => d.balance || 0);
         
         new Chart(ctx, {
             type: 'line',
