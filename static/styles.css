@@ -14,7 +14,7 @@ body {
 }
 
 .navbar {
-    background-color: var(--primary-color) !important;
+    background-color: var(--primary-color);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
@@ -23,7 +23,7 @@ body {
 }
 
 .nav-link:hover {
-    color: var(--accent-color) !important;
+    color: var(--accent-color);
 }
 
 .card {
@@ -51,8 +51,8 @@ body {
     margin-top: 50px;
 }
 
-.text-primary { color: var(--primary-color) !important; }
-.bg-primary { background-color: var(--primary-color) !important; }
+.text-primary { color: var(--primary-color); }
+.bg-primary { background-color: var(--primary-color); }
 
 .card h3 {
     margin-bottom: 0;

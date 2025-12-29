@@ -105,37 +105,51 @@
 <script>
     const cashflowData = {{ cashflow | tojson }};
     
-    if (cashflowData && cashflowData.length > 0) {
-        const ctx = document.getElementById('cashflowChart').getContext('2d');
-        const labels = cashflowData.map(d => new Date(d.period_end).toLocaleDateString());
-        const dataBalance = cashflowData.map(d => d.balance);
-        
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Saldo Proyectado',
-                    data: dataBalance,
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                    tension: 0.1,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' }
+    if (cashflowData && cashflowData.length > 0 && typeof Chart !== 'undefined') {
+        try {
+            const ctx = document.getElementById('cashflowChart').getContext('2d');
+            const labels = cashflowData.map(d => {
+                try {
+                    return new Date(d.period_end).toLocaleDateString();
+                } catch(e) {
+                    return d.period_end || 'N/A';
+                }
+            });
+            const dataBalance = cashflowData.map(d => d.balance || 0);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Saldo Proyectado',
+                        data: dataBalance,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                        tension: 0.1,
+                        fill: true
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: false,
-                        grid: { color: '#f0f0f0' }
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: '#f0f0f0' }
+                        }
                     }
                 }
+            });
+        } catch (error) {
+            console.error('Error rendering chart:', error);
+            const canvas = document.getElementById('cashflowChart');
+            if (canvas) {
+                canvas.parentElement.innerHTML = '<p class="text-muted">Gráfico no disponible. Los datos están en la tabla a continuación.</p>';
             }
-        });
+        }
     }
 </script>
 {% endblock %}

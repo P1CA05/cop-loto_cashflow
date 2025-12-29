@@ -115,11 +115,15 @@
 
 {% block scripts %}
 <script>
-    document.getElementById('analysisForm').addEventListener('submit', function() {
+    document.getElementById('analysisForm').addEventListener('submit', function(e) {
         var btn = document.getElementById('btnAnalyze');
+        var originalContent = btn.innerHTML;
         btn.disabled = true;
         btn.querySelector('.spinner-border').classList.remove('d-none');
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analizando...';
+        
+        // Store original content in case we need to restore it
+        btn.setAttribute('data-original', originalContent);
     });
 </script>
 {% endblock %}
