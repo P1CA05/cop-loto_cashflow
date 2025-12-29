@@ -1,143 +1,115 @@
 {% extends "base.html" %}
 
+{% block title %}Inicio - Copiloto Cashflow{% endblock %}
+
 {% block content %}
-<div class="page-header">
-    <h2>Nuevo Análisis de Supervivencia</h2>
-    <p>Sube tus datos financieros y obtén una proyección de caja fiable con recomendaciones accionables</p>
-</div>
-
-<form action="{{ url_for('analyze') }}" method="post" enctype="multipart/form-data" class="analysis-form">
-    
-    <!-- Section 1: Básico (Required) -->
-    <div class="form-section">
-        <h3>📊 Información Básica <span class="required">*Obligatorio</span></h3>
-        
-        <div class="form-group">
-            <label for="starting_balance">Saldo Actual Disponible (€) *</label>
-            <input type="number" step="0.01" name="starting_balance" id="starting_balance" required 
-                   placeholder="ej. 15000.00">
-            <small>Tu saldo en banco disponible hoy</small>
-        </div>
-
-        <div class="form-group">
-            <label for="horizon_months">Horizonte de Supervivencia *</label>
-            <select name="horizon_months" id="horizon_months" required>
-                <option value="3">3 meses</option>
-                <option value="6" selected>6 meses (recomendado)</option>
-                <option value="9">9 meses</option>
-                <option value="12">12 meses</option>
-            </select>
-            <small>¿Cuántos meses quieres proyectar?</small>
-        </div>
-
-        <div class="form-group">
-            <label for="bank_file">Extracto Bancario (CSV o Excel) *</label>
-            <input type="file" name="bank_file" id="bank_file" accept=".csv,.xlsx,.xls" required>
-            <small>Movimientos bancarios históricos. <a href="{{ url_for('help_page') }}#templates" target="_blank">Ver formato</a></small>
-        </div>
-    </div>
-
-    <!-- Section 2: Datos Adicionales (Optional) -->
-    <div class="form-section">
-        <h3>📈 Datos Adicionales (Opcionales pero recomendados)</h3>
-        
-        <div class="form-group">
-            <label for="fixed_costs_monthly">Gastos Fijos Mensuales (€)</label>
-            <input type="number" step="0.01" name="fixed_costs_monthly" id="fixed_costs_monthly" 
-                   placeholder="ej. 5000.00">
-            <small>Nóminas, alquiler, suscripciones fijas, etc.</small>
-        </div>
-
-        <div class="form-group">
-            <label for="sales_invoices_file">Facturas Emitidas (CSV o Excel)</label>
-            <input type="file" name="sales_invoices_file" id="sales_invoices_file" accept=".csv,.xlsx,.xls">
-            <small>Facturas pendientes de cobro. <a href="{{ url_for('help_page') }}#templates" target="_blank">Ver formato</a></small>
-        </div>
-
-        <div class="form-group">
-            <label for="purchase_invoices_file">Facturas Recibidas (CSV o Excel)</label>
-            <input type="file" name="purchase_invoices_file" id="purchase_invoices_file" accept=".csv,.xlsx,.xls">
-            <small>Facturas pendientes de pago. <a href="{{ url_for('help_page') }}#templates" target="_blank">Ver formato</a></small>
-        </div>
-    </div>
-
-    <!-- Section 3: Línea de Crédito -->
-    <div class="form-section">
-        <h3>💳 Línea de Crédito (Opcional)</h3>
-        
-        <div class="form-row">
-            <div class="form-group">
-                <label for="credit_line_total">Línea de Crédito Total (€)</label>
-                <input type="number" step="0.01" name="credit_line_total" id="credit_line_total" 
-                       placeholder="ej. 50000.00">
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h4 class="mb-0 text-primary"><i class="fas fa-calculator me-2"></i>Nuevo Análisis Financiero</h4>
             </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('analyze') }}" method="post" enctype="multipart/form-data" id="analysisForm">
+                    
+                    <h5 class="text-secondary mb-3">1. Situación Actual</h5>
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label for="starting_balance" class="form-label">Saldo Actual en Banco (€) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">€</span>
+                                <input type="number" step="0.01" class="form-control" id="starting_balance" name="starting_balance" required placeholder="0.00">
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="horizon_months" class="form-label">Horizonte de Proyección</label>
+                            <select class="form-select" id="horizon_months" name="horizon_months">
+                                <option value="3">3 Meses</option>
+                                <option value="6" selected>6 Meses</option>
+                                <option value="12">12 Meses</option>
+                            </select>
+                        </div>
+                    </div>
 
-            <div class="form-group">
-                <label for="credit_line_used">Crédito Usado Actualmente (€)</label>
-                <input type="number" step="0.01" name="credit_line_used" id="credit_line_used" 
-                       placeholder="ej. 10000.00">
+                    <h5 class="text-secondary mb-3">2. Importación de Datos</h5>
+                    <div class="mb-4">
+                        <div class="mb-3">
+                            <label for="bank_file" class="form-label">Extracto Bancario (CSV/Excel) *</label>
+                            <input class="form-control" type="file" id="bank_file" name="bank_file" accept=".csv,.xlsx,.xls" required>
+                            <div class="form-text">Histórico de movimientos para detectar patrones.</div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="sales_invoices_file" class="form-label">Facturas Emitidas (Opcional)</label>
+                                <input class="form-control" type="file" id="sales_invoices_file" name="sales_invoices_file" accept=".csv,.xlsx,.xls">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="purchase_invoices_file" class="form-label">Facturas Recibidas (Opcional)</label>
+                                <input class="form-control" type="file" id="purchase_invoices_file" name="purchase_invoices_file" accept=".csv,.xlsx,.xls">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion mb-4" id="accordionAdvanced">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdvanced">
+                                    <i class="fas fa-sliders-h me-2"></i> Configuración Avanzada
+                                </button>
+                            </h2>
+                            <div id="collapseAdvanced" class="accordion-collapse collapse" data-bs-parent="#accordionAdvanced">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Gastos Fijos Mensuales (€)</label>
+                                            <input type="number" step="0.01" class="form-control" name="fixed_costs_monthly">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Umbral de Seguridad (€)</label>
+                                            <input type="number" step="0.01" class="form-control" name="safety_threshold" value="1000">
+                                            <div class="form-text">Mínimo saldo deseado en cuenta.</div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Línea de Crédito Total (€)</label>
+                                            <input type="number" step="0.01" class="form-control" name="credit_line_total">
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Crédito Usado (€)</label>
+                                            <input type="number" step="0.01" class="form-control" name="credit_line_used">
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch mt-2">
+                                        <input class="form-check-input" type="checkbox" id="conservative_mode" name="conservative_mode">
+                                        <label class="form-check-label" for="conservative_mode">Modo Conservador (Pesimista)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="btnAnalyze">
+                            <span class="spinner-border spinner-border-sm d-none me-2" role="status" aria-hidden="true"></span>
+                            <i class="fas fa-search-dollar me-2"></i>Generar Análisis
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
-
-        <div class="form-group">
-            <label for="interest_rate">Interés Anual Estimado (%)</label>
-            <input type="number" step="0.01" name="interest_rate" id="interest_rate" 
-                   placeholder="ej. 5.5">
-            <small>Para estimar coste de uso de crédito</small>
-        </div>
     </div>
-
-    <!-- Section 4: Configuración Avanzada -->
-    <div class="form-section">
-        <h3>⚙️ Configuración Avanzada</h3>
-        
-        <div class="form-group">
-            <label for="safety_threshold">Umbral de Seguridad (€)</label>
-            <input type="number" step="0.01" name="safety_threshold" id="safety_threshold" 
-                   placeholder="ej. 5000.00">
-            <small>Saldo mínimo que quieres mantener como colchón</small>
-        </div>
-
-        <div class="form-group">
-            <label for="granularity">Granularidad de Análisis</label>
-            <select name="granularity" id="granularity">
-                <option value="daily">Diaria</option>
-                <option value="weekly" selected>Semanal (recomendado)</option>
-                <option value="monthly">Mensual</option>
-            </select>
-            <small>Nivel de detalle de la proyección</small>
-        </div>
-
-        <div class="form-group checkbox-group">
-            <label>
-                <input type="checkbox" name="conservative_mode" id="conservative_mode">
-                <strong>Modo Conservador</strong>
-            </label>
-            <small>Retrasar cobros previstos +15 días en escenario conservador</small>
-        </div>
-    </div>
-
-    <!-- Submit -->
-    <div class="form-actions">
-        <button type="submit" class="btn btn-primary">
-            🚀 Analizar Supervivencia Financiera
-        </button>
-        <p class="form-note">El análisis tarda 10-30 segundos. Los datos se procesan localmente.</p>
-    </div>
-</form>
-
-<div class="info-box">
-    <h4>💡 ¿Qué obtendrás?</h4>
-    <ul>
-        <li>✅ Proyección de caja fiable (cálculo determinista, no IA)</li>
-        <li>✅ Capital necesario para sobrevivir X meses</li>
-        <li>✅ Financiación puente vs capital propio</li>
-        <li>✅ Suficiencia de tu línea de crédito</li>
-        <li>✅ Escenarios "qué pasa si..."</li>
-        <li>✅ Alertas accionables + plan de acción priorizado</li>
-        <li>✅ Informe descargable (TXT, MD, CSV)</li>
-        <li>✅ Memoria persistente (reabre y compara análisis)</li>
-    </ul>
 </div>
+{% endblock %}
 
+{% block scripts %}
+<script>
+    document.getElementById('analysisForm').addEventListener('submit', function() {
+        var btn = document.getElementById('btnAnalyze');
+        btn.disabled = true;
+        btn.querySelector('.spinner-border').classList.remove('d-none');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analizando...';
+    });
+</script>
 {% endblock %}

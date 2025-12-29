@@ -3,56 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Copiloto de Supervivencia Financiera{% endblock %}</title>
+    <title>{% block title %}Copiloto Cashflow{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    {% block head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
         <div class="container">
-            <div class="nav-brand">
-                <h1>💰 Copiloto de Supervivencia Financiera</h1>
-                <p class="tagline">Análisis de Cashflow para PYMEs</p>
-            </div>
-            {% if session.get('user') %}
-            <ul class="nav-menu">
-                <li><a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>Inicio</a></li>
-                <li><a href="{{ url_for('history') }}" {% if request.endpoint == 'history' %}class="active"{% endif %}>Historial</a></li>
-                <li><a href="{{ url_for('help_page') }}" {% if request.endpoint == 'help_page' %}class="active"{% endif %}>Ayuda</a></li>
-                {% if session.get('user').get('role') == 'admin' %}
-                    <li><a href="{{ url_for('admin_panel') }}" {% if request.endpoint == 'admin_panel' %}class="active"{% endif %}>Admin</a></li>
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <i class="fas fa-chart-line me-2"></i>Copiloto Cashflow
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if session.get('user') %}
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}"><i class="fas fa-home me-1"></i> Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('history') }}"><i class="fas fa-history me-1"></i> Historial</a>
+                    </li>
+                    {% if session.get('user').get('role') == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('admin_panel') }}"><i class="fas fa-cog me-1"></i> Admin</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> {{ session.get('user').get('username') }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Cerrar Sesión</a></li>
+                        </ul>
+                    </li>
+                </ul>
+                {% else %}
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('login') }}">Iniciar Sesión</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('register') }}">Registrarse</a></li>
+                </ul>
                 {% endif %}
-                <li class="user-info">
-                    <span class="user-badge">👤 {{ session.get('user').get('username') }}</span>
-                    <a href="{{ url_for('logout') }}" class="btn-logout">Salir</a>
-                </li>
-            </ul>
-            {% endif %}
+            </div>
         </div>
     </nav>
 
-    <main class="container">
+    <main class="container min-vh-100">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="alerts">
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                </div>
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
             {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer">
+    <footer class="footer text-center">
         <div class="container">
-            <p>&copy; 2025 Copiloto de Supervivencia Financiera | Powered by Python + Flask + Claude 4.5</p>
-            <p class="footer-note">Análisis determinista con interpretación IA</p>
+            <p class="mb-0">&copy; 2025 Copiloto de Supervivencia Financiera.</p>
+            <small>Análisis financiero potenciado por IA</small>
         </div>
     </footer>
 
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>
