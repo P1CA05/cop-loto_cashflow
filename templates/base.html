@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Copiloto de Supervivencia Financiera{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern-ui.css') }}">
     <style>
         /* Debug marker - Remove after verification */
         body::after {
@@ -24,7 +25,7 @@
     <script>
         // Load theme before render to prevent flash
         (function() {
-            const saved = localStorage.getItem("theme") || "dark";
+            const saved = localStorage.getItem("theme") || "light"; // DEFAULT: LIGHT
             document.documentElement.dataset.theme = saved;
             console.log("🎨 Initial theme:", saved);
         })();
@@ -48,7 +49,7 @@
                 <li class="user-info">
                     <button onclick="toggleTheme()" class="theme-toggle" id="themeToggle" title="Cambiar tema">
                         <span id="themeIcon">🌙</span>
-                        <span id="themeText">Modo Claro</span>
+                        <span id="themeText">Modo Oscuro</span>
                     </button>
                     <span class="user-badge">👤 {{ session.get('user').get('username') }}</span>
                     <a href="{{ url_for('logout') }}" class="btn-logout">Salir</a>

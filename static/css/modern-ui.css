@@ -1,0 +1,344 @@
+/* Modern UI Overrides - Diseño selvazul inspired */
+
+/* Hero Section - Charcoal elegante con textura sutil */
+.hero-section {
+    background: 
+        linear-gradient(135deg, rgba(17, 24, 39, 0.97), rgba(31, 41, 55, 0.95)),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.03) 2px, rgba(0,0,0,.03) 4px),
+        linear-gradient(135deg, #1F2937, #374151);
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+    padding: 5rem 3rem;
+    margin: 2.5rem 0 3rem 0;
+    color: white;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at 30% 50%, rgba(107, 114, 128, 0.1), transparent 70%);
+    pointer-events: none;
+}
+
+.hero-section h1 {
+    color: #F9FAFB;
+    font-size: 2.75rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    letter-spacing: -0.03em;
+    position: relative;
+    z-index: 1;
+}
+
+.hero-section p {
+    color: #D1D5DB;
+    font-size: 1.125rem;
+    font-weight: 400;
+    max-width: 600px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    line-height: 1.7;
+}
+
+/* Cards flotantes mejoradas */
+.card-modern {
+    background: var(--bg-card);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-modern:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    letter-spacing: -0.02em;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-header::before {
+    content: "";
+    width: 4px;
+    height: 20px;
+    background: var(--accent-primary);
+    border-radius: 2px;
+}
+
+/* File Upload Drag & Drop */
+.file-upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 3rem 2.5rem;
+    text-align: center;
+    background: var(--bg-card-secondary);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+}
+
+.file-upload-area:hover {
+    border-color: var(--accent-primary);
+    background: var(--highlight-bg);
+    transform: translateY(-2px);
+}
+
+.file-upload-area.drag-over {
+    border-color: var(--accent-primary);
+    background: var(--highlight-bg);
+    transform: scale(1.01);
+    box-shadow: var(--shadow-md);
+}
+
+.file-upload-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.file-upload-text {
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.file-upload-hint {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.file-upload-button {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-block;
+}
+
+.file-upload-button:hover {
+    background: var(--btn-primary-hover);
+    transform: translateY(-1px);
+}
+
+.file-selected {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: #DBEAFE;
+    border-radius: 8px;
+    color: #1E40AF;
+    font-size: 0.875rem;
+    display: inline-block;
+}
+
+/* Inputs modernos */
+.form-group {
+    margin-bottom: 1.75rem;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.625rem;
+    font-size: 0.875rem;
+    letter-spacing: -0.01em;
+}
+
+.form-control {
+    width: 100%;
+    height: 42px;
+    padding: 0 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+    background: var(--bg-card-secondary);
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit;
+}
+
+.form-control:hover {
+    border-color: var(--text-muted);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+    opacity: 0.6;
+}
+
+/* Select modernos */
+.form-select {
+    width: 100%;
+    height: 42px;
+    padding: 0 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+    background: var(--bg-card-secondary);
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit;
+}
+
+.form-select:hover {
+    border-color: var(--text-muted);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    background: var(--bg-card);
+    box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
+}
+
+/* Botones mejorados */
+.btn-modern {
+    height: 44px;
+    padding: 0 1.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    letter-spacing: -0.01em;
+}
+
+.btn-modern-primary {
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-modern-primary:hover {
+    background: var(--btn-primary-hover);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.btn-modern-primary:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-modern-secondary {
+    background: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
+    border: 1px solid var(--border-color);
+}
+
+.btn-modern-secondary:hover {
+    background: var(--btn-secondary-hover);
+    transform: translateY(-1px);
+}
+
+.btn-modern-secondary:active {
+    transform: translateY(0);
+}
+
+/* Grid de 2 columnas para forms */
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Iconos en navegación */
+.nav-menu a[href*="analyze"]::before { content: "🏠 "; }
+.nav-menu a[href*="history"]::before { content: "📋 "; }
+.nav-menu a[href*="help"]::before { content: "❓ "; }
+.nav-menu a[href*="admin"]::before { content: "⚙️ "; }
+
+/* Main content spacing */
+main.container {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+}
+
+/* Mejoras de navbar */
+.theme-toggle {
+    background: var(--bg-card-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+    background: var(--bg-card);
+    border-color: var(--accent-primary);
+}
+
+.user-badge {
+    background: var(--bg-card-secondary);
+    color: var(--text-primary);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border: 1px solid var(--border-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 2.5rem 1.5rem;
+    }
+    
+    .hero-section h1 {
+        font-size: 1.75rem;
+    }
+    
+    .card-modern {
+        padding: 1.5rem;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}

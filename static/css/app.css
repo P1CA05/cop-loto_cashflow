@@ -2,62 +2,90 @@
 
 /* CSS Variables - Theme System */
 
-/* Dark Mode (Principal) */
+/* Dark Mode - Charcoal/Coal Grey Enterprise Grade */
 :root[data-theme="dark"] {
-    /* Backgrounds */
-    --bg-main: #0f1115;
-    --bg-card: #161a21;
-    --bg-card-secondary: #1f2430;
-    --border-color: #2a3040;
+    /* Backgrounds - Charcoal profesional */
+    --bg-main: #111827;
+    --bg-card: #1F2937;
+    --bg-card-secondary: #374151;
+    --border-color: #4B5563;
     
-    /* Text Colors */
-    --text-primary: #e6e8ee;
-    --text-secondary: #aab0c0;
-    --text-muted: #7f8699;
+    /* Text Colors - Sin blanco puro */
+    --text-primary: #F9FAFB;
+    --text-secondary: #E5E7EB;
+    --text-muted: #9CA3AF;
     
-    /* Accent Colors */
-    --accent-primary: #4f8cff;
-    --accent-success: #22c55e;
-    --accent-warning: #f59e0b;
-    --accent-danger: #ef4444;
+    /* Accent Colors - Sobrios pero distinguibles */
+    --accent-primary: #6B7280;
+    --accent-success: #10B981;
+    --accent-warning: #F59E0B;
+    --accent-danger: #EF4444;
+    
+    /* Botones principales - Charcoal elegante */
+    --btn-primary-bg: #374151;
+    --btn-primary-text: #F9FAFB;
+    --btn-primary-hover: #4B5563;
+    
+    --btn-secondary-bg: #1F2937;
+    --btn-secondary-text: #E5E7EB;
+    --btn-secondary-hover: #374151;
+    
+    /* Zonas de interés */
+    --highlight-bg: #374151;
+    --highlight-border: #6B7280;
     
     /* Semantic Colors */
-    --positive: #22c55e;
-    --negative: #ef4444;
+    --positive: #10B981;
+    --negative: #EF4444;
     
-    /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
-    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.35);
-    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.45);
+    /* Shadows - Suaves y difusas */
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-navbar: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
-/* Light Mode (Alternativo) */
+/* Light Mode - Diseño moderno profesional */
 :root[data-theme="light"] {
-    /* Backgrounds */
-    --bg-main: #ffffff;
-    --bg-card: #f3f4f6;
-    --bg-card-secondary: #e5e7eb;
-    --border-color: #d1d5db;
+    /* Backgrounds - Fondo gris claro, cards blancas */
+    --bg-main: #F9FAFB;
+    --bg-card: #FFFFFF;
+    --bg-card-secondary: #F3F4F6;
+    --border-color: #E5E7EB;
     
     /* Text Colors */
-    --text-primary: #0f172a;
+    --text-primary: #111827;
     --text-secondary: #374151;
-    --text-muted: #6b7280;
+    --text-muted: #6B7280;
     
-    /* Accent Colors */
-    --accent-primary: #4f8cff;
-    --accent-success: #16a34a;
-    --accent-warning: #d97706;
-    --accent-danger: #dc2626;
+    /* Accent Colors - Charcoal en modo claro */
+    --accent-primary: #374151;
+    --accent-success: #10B981;
+    --accent-warning: #F59E0B;
+    --accent-danger: #EF4444;
+    
+    /* Botones principales - Charcoal profesional */
+    --btn-primary-bg: #1F2937;
+    --btn-primary-text: #F9FAFB;
+    --btn-primary-hover: #111827;
+    
+    --btn-secondary-bg: #F3F4F6;
+    --btn-secondary-text: #374151;
+    --btn-secondary-hover: #E5E7EB;
+    
+    /* Zonas de interés */
+    --highlight-bg: #F3F4F6;
+    --highlight-border: #374151;
     
     /* Semantic Colors */
-    --positive: #16a34a;
-    --negative: #dc2626;
+    --positive: #10B981;
+    --negative: #EF4444;
     
-    /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
+    /* Shadows - Suaves y difusas (Tailwind-style) */
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --shadow-navbar: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 /* Default to dark mode */
@@ -83,41 +111,52 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
     line-height: 1.6;
     color: var(--text-secondary);
     background: var(--bg-main);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 100vh;
+    font-size: 15px;
+    letter-spacing: -0.011em;
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 0 var(--spacing-lg);
 }
 
-/* Typography */
+.container-boxed {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--spacing-xl);
+}
+
+/* Typography - Enterprise Grade */
 h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
 }
 
 h1 {
-    font-size: 2rem;
-    margin-bottom: var(--spacing-md);
+    font-size: 2.25rem;
+    margin-bottom: var(--spacing-lg);
+    font-weight: 700;
 }
 
 h2 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     margin-bottom: var(--spacing-md);
 }
 
 h3 {
-    font-size: 1.25rem;
-    margin-bottom: var(--spacing-sm);
+    font-size: 1.35rem;
+    margin-bottom: var(--spacing-md);
 }
 
 p {
@@ -363,7 +402,7 @@ main {
     background: rgba(79, 140, 255, 0.05);
 }
 
-/* Buttons */
+/* Buttons - Usan variables de tema */
 .btn {
     display: inline-block;
     padding: var(--spacing-sm) var(--spacing-lg);
@@ -377,21 +416,26 @@ main {
 }
 
 .btn-primary {
-    background: var(--accent-primary);
-    color: white;
-    box-shadow: 0 2px 8px rgba(79, 140, 255, 0.3);
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    box-shadow: var(--shadow-sm);
 }
 
 .btn-primary:hover {
-    background: #6fa3ff;
-    box-shadow: 0 4px 12px rgba(79, 140, 255, 0.4);
+    background: var(--btn-primary-hover);
+    box-shadow: var(--shadow-md);
     transform: translateY(-1px);
 }
 
 .btn-secondary {
-    background: var(--bg-card-secondary);
-    color: var(--text-secondary);
+    background: var(--btn-secondary-bg);
+    color: var(--btn-secondary-text);
     border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--btn-secondary-hover);
+    transform: translateY(-1px);
 }
 
 .btn-secondary:hover {
