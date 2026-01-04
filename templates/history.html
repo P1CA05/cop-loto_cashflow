@@ -47,8 +47,15 @@
                         {{ "%.0f" | format(snapshot.credit_gap) }}€
                     </td>
                     <td>
-                        <a href="{{ url_for('results', snapshot_id=snapshot.snapshot_id) }}" 
-                           class="btn btn-small">Ver</a>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{{ url_for('results', snapshot_id=snapshot.snapshot_id) }}" 
+                               class="btn btn-small" title="Ver análisis">👁️ Ver</a>
+                            <form method="POST" action="{{ url_for('delete_analysis', snapshot_id=snapshot.snapshot_id) }}" 
+                                  style="display: inline;"
+                                  onsubmit="return confirm('¿Seguro que quieres eliminar este análisis? Esta acción no se puede deshacer.');">
+                                <button type="submit" class="btn btn-small btn-danger" title="Eliminar">🗑️</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}

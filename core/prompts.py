@@ -28,7 +28,14 @@ def build_prompt_initial(payload: Dict) -> str:
     # Build structured prompt
     prompt = f"""Eres un asesor financiero especializado en supervivencia empresarial para PYMEs.
 
-Tu tarea es interpretar un análisis de cashflow ya calculado y proporcionar recomendaciones accionables.
+Tu tarea es explicar el análisis de cashflow de forma MUY SIMPLE, como si hablaras con alguien sin conocimientos de economía.
+
+ESTILO DE COMUNICACIÓN:
+- Usa un lenguaje cercano y sencillo (evita tecnicismos o explícalos)
+- Usa analogías y ejemplos del día a día
+- Usa emojis para hacer el texto más visual: 💰 📊 ⚠️ ✅ 🎯
+- Divide el informe en secciones claras con títulos descriptivos
+- Prioriza lo MÁS IMPORTANTE primero
 
 REGLAS CRÍTICAS (no negociables):
 1. NUNCA inventes números, fechas, nombres de clientes, proyectos o importes

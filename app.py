@@ -9,6 +9,10 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 import pandas as pd
 from io import BytesIO
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Core imports
 from core.validators import validate_float, validate_file, validate_horizon, validate_granularity
@@ -28,6 +32,8 @@ from core.postcheck import postcheck_report
 from core.snapshot_tools import save_snapshot, load_snapshot, update_snapshot, list_snapshots
 from core.auth import (init_users_system, authenticate_user, create_user, 
                        list_all_users, update_user_status, delete_user)
+from core.executive_summary import generate_executive_summary, format_scenario_changes
+from core.ui_helpers import filter_cashflow_periods, aggregate_cashflow_monthly, find_alert_transactions, format_capital_breakdown
 
 # Setup logging
 logging.basicConfig(
@@ -47,6 +53,61 @@ os.makedirs('exports/templates', exist_ok=True)
 
 # Initialize users system
 init_users_system()
+
+
+# Custom Jinja2 filter for markdown-like formatting
+@app.template_filter('format_report')
+def format_report(text):
+    """Convert basic markdown to styled HTML"""
+    import re
+    
+    if not text:
+        return ""
+    
+    # Convert headers
+    text = re.sub(r'^### (.+)$', r'<h3>\1</h3>', text, flags=re.MULTILINE)
+    text = re.sub(r'^## (.+)$', r'<h2>\1</h2>', text, flags=re.MULTILINE)
+    text = re.sub(r'^# (.+)$', r'<h1>\1</h1>', text, flags=re.MULTILINE)
+    
+    # Convert bold
+    text = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', text)
+    
+    # Convert italic
+    text = re.sub(r'\*(.+?)\*', r'<em>\1</em>', text)
+    
+    # Convert bullet lists
+    lines = text.split('\n')
+    in_list = False
+    result_lines = []
+    
+    for line in lines:
+        if line.strip().startswith('- ') or line.strip().startswith('* '):
+            if not in_list:
+                result_lines.append('<ul>')
+                in_list = True
+            item = line.strip()[2:]
+            result_lines.append(f'<li>{item}</li>')
+        else:
+            if in_list:
+                result_lines.append('</ul>')
+                in_list = False
+            result_lines.append(line)
+    
+    if in_list:
+        result_lines.append('</ul>')
+    
+    text = '\n'.join(result_lines)
+    
+    # Convert paragraphs (double newline = new paragraph)
+    text = re.sub(r'\n\n+', '</p><p>', text)
+    text = '<p>' + text + '</p>'
+    
+    # Clean up empty paragraphs
+    text = re.sub(r'<p>\s*</p>', '', text)
+    text = re.sub(r'<p>\s*<(h[1-6]|ul|ol)>', r'<\1>', text)
+    text = re.sub(r'</(h[1-6]|ul|ol)>\s*</p>', r'</\1>', text)
+    
+    return text
 
 
 # Auth decorators
@@ -156,9 +217,17 @@ def dashboard():
 @app.route('/analyze', methods=['POST'])
 @login_required
 def analyze():
-    """Main analysis endpoint"""
+    """Main analysis endpoint with robust error handling"""
     try:
         logger.info("=== Starting new analysis ===")
+        logger.info(f"Request form keys: {list(request.form.keys())}")
+        logger.info(f"Request files keys: {list(request.files.keys())}")
+        
+        # Ensure data directories exist
+        os.makedirs('data/history', exist_ok=True)
+        user_id = session.get('user', {}).get('user_id')
+        if user_id:
+            os.makedirs(f'data/history/{user_id}', exist_ok=True)
         
         # 1. VALIDATE INPUTS
         errors = []
@@ -179,9 +248,12 @@ def analyze():
         
         # Extracto bancario (required)
         bank_file = request.files.get('bank_file')
-        is_valid, error = validate_file(bank_file, ['.csv', '.xlsx', '.xls'])
-        if not is_valid:
-            errors.append(error)
+        if not bank_file or not bank_file.filename:
+            errors.append('Debes subir un extracto bancario')
+        else:
+            is_valid, error = validate_file(bank_file, ['.csv', '.xlsx', '.xls'])
+            if not is_valid:
+                errors.append(error)
         
         # Optional inputs
         is_valid, _, fixed_costs = validate_float(
@@ -237,12 +309,21 @@ def analyze():
         # 2. PARSE FILES
         all_warnings = []
         
-        # Parse bank statement
+        # Parse bank statement (REQUIRED)
         logger.info("Parsing bank statement...")
-        bank_df, bank_warnings = parse_bank_file(bank_file)
-        all_warnings.extend(bank_warnings)
+        logger.info(f"Bank file type: {type(bank_file)}, has filename: {hasattr(bank_file, 'filename')}")
+        try:
+            bank_df, bank_warnings = parse_bank_file(bank_file)
+            logger.info(f"Bank parsing successful: {len(bank_df)} rows")
+            all_warnings.extend(bank_warnings)
+            if bank_df is None or len(bank_df) == 0:
+                raise ValueError("El extracto bancario está vacío o no se pudo leer")
+        except Exception as e:
+            logger.error(f"FATAL: Bank file parsing failed: {e}", exc_info=True)
+            flash(f"Error al leer extracto bancario: {str(e)}", 'error')
+            return redirect(url_for('index'))
         
-        # Parse sales invoices (optional)
+        # Parse sales invoices (OPTIONAL - never break analysis)
         sales_invoices_df = None
         sales_file = request.files.get('sales_invoices_file')
         if sales_file and sales_file.filename:
@@ -250,11 +331,13 @@ def analyze():
                 logger.info("Parsing sales invoices...")
                 sales_invoices_df, sales_warnings = parse_sales_invoices(sales_file)
                 all_warnings.extend(sales_warnings)
+                logger.info(f"Sales invoices parsed: {len(sales_invoices_df)} rows")
             except Exception as e:
-                logger.error(f"Error parsing sales invoices: {e}")
-                all_warnings.append(f"⚠️ Error en facturas emitidas: {str(e)}")
+                logger.warning(f"Error parsing sales invoices (OPTIONAL): {e}")
+                all_warnings.append(f"⚠️ Facturas emitidas no pudieron procesarse (continuando sin ellas)")
+                sales_invoices_df = None
         
-        # Parse purchase invoices (optional)
+        # Parse purchase invoices (OPTIONAL - never break analysis)
         purchase_invoices_df = None
         purchase_file = request.files.get('purchase_invoices_file')
         if purchase_file and purchase_file.filename:
@@ -262,9 +345,11 @@ def analyze():
                 logger.info("Parsing purchase invoices...")
                 purchase_invoices_df, purchase_warnings = parse_purchase_invoices(purchase_file)
                 all_warnings.extend(purchase_warnings)
+                logger.info(f"Purchase invoices parsed: {len(purchase_invoices_df)} rows")
             except Exception as e:
-                logger.error(f"Error parsing purchase invoices: {e}")
-                all_warnings.append(f"⚠️ Error en facturas recibidas: {str(e)}")
+                logger.warning(f"Error parsing purchase invoices (OPTIONAL): {e}")
+                all_warnings.append(f"⚠️ Facturas recibidas no pudieron procesarse (continuando sin ellas)")
+                purchase_invoices_df = None
         
         # 3. ASSESS DATA QUALITY
         quality_assessment = assess_data_quality(
@@ -280,23 +365,35 @@ def analyze():
         
         # 4. BUILD EVENTS
         logger.info("Building cash events...")
-        events = build_events(
-            bank_df,
-            sales_invoices_df,
-            purchase_invoices_df,
-            fixed_costs,
-            conservative_mode
-        )
+        try:
+            events = build_events(
+                bank_df,
+                sales_invoices_df,
+                purchase_invoices_df,
+                fixed_costs,
+                conservative_mode
+            )
+            logger.info(f"Events built: {len(events)}")
+        except Exception as e:
+            logger.error(f"Error building events: {e}", exc_info=True)
+            flash(f"Error al construir eventos de caja: {str(e)}", 'error')
+            return redirect(url_for('index'))
         
         # 5. BUILD BASE CASHFLOW
         logger.info("Building cashflow...")
-        cashflow_df, kpis = build_cashflow(
-            events,
-            starting_balance,
-            horizon_months,
-            granularity,
-            safety_threshold
-        )
+        try:
+            cashflow_df, kpis = build_cashflow(
+                events,
+                starting_balance,
+                horizon_months,
+                granularity,
+                safety_threshold
+            )
+            logger.info(f"Cashflow built: {len(cashflow_df)} periods")
+        except Exception as e:
+            logger.error(f"Error building cashflow: {e}", exc_info=True)
+            flash(f"Error al proyectar cashflow: {str(e)}", 'error')
+            return redirect(url_for('index'))
         
         # 6. CALCULATE SURVIVAL METRICS
         logger.info("Calculating survival metrics...")
@@ -346,6 +443,23 @@ def analyze():
         logger.info("Generating action plan...")
         action_plan = generate_action_plan(alerts, enriched_kpis, survival_analysis)
         
+        # 10.5 GENERATE EXECUTIVE SUMMARY (NEW!)
+        logger.info("Generating executive summary...")
+        executive_summary = generate_executive_summary(
+            enriched_kpis, 
+            survival_analysis, 
+            alerts, 
+            quality_metrics,
+            cashflow_df
+        )
+        
+        # 10.6 FORMAT SCENARIO CHANGES EXPLANATION (NEW!)
+        has_future_data = quality_metrics.get('has_future_collections') or quality_metrics.get('has_future_payments')
+        scenario_explanations = format_scenario_changes(scenarios, has_future_data)
+        
+        # 10.7 FORMAT CAPITAL BREAKDOWN (NEW!)
+        capital_breakdown = format_capital_breakdown(survival_analysis)
+        
         # 11. GENERATE REPORT (LLM or rules-based)
         logger.info("Generating report...")
         
@@ -391,14 +505,18 @@ def analyze():
             'quality_metrics': quality_metrics,
             'warnings': all_warnings,
             'cashflow_df': cashflow_df,
+            'events_df': events_df,  # NUEVO - para drill-down
             'kpis': enriched_kpis,
             'survival': survival_analysis,
             'credit_usage': credit_usage,
             'scenarios': {k: {'name': v['name'], 'kpis': v['kpis'], 'survival': v['survival']} 
                          for k, v in scenarios.items()},
             'scenarios_comparison': scenarios_comparison,
+            'scenario_explanations': scenario_explanations,  # NUEVO
             'alerts': alerts,
             'action_plan': action_plan,
+            'executive_summary': executive_summary,  # NUEVO
+            'capital_breakdown': capital_breakdown,  # NUEVO
             'report_v1': report_v1,
             'report_source': report_source,
             'refine_questions_presented': True,
@@ -414,8 +532,12 @@ def analyze():
         return redirect(url_for('results', snapshot_id=snapshot_id))
     
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
         logger.error(f"Error in analysis: {e}", exc_info=True)
+        logger.error(f"Full traceback:\n{error_details}")
         flash(f"Error en el análisis: {str(e)}", 'error')
+        flash(f"Detalles: {error_details[:500]}", 'error')
         return redirect(url_for('index'))
 
 
@@ -433,20 +555,37 @@ def results(snapshot_id):
     # Prepare data for template
     cashflow_df = pd.DataFrame(snapshot['cashflow_df'])
     if len(cashflow_df) > 0:
-        cashflow_df['period_start'] = pd.to_datetime(cashflow_df['period_start'])
-        cashflow_df['period_end'] = pd.to_datetime(cashflow_df['period_end'])
+        # Convert to datetime and then to formatted string
+        # Handle both string and datetime formats
+        try:
+            cashflow_df['period_start'] = pd.to_datetime(cashflow_df['period_start']).dt.strftime('%Y-%m-%d')
+            cashflow_df['period_end'] = pd.to_datetime(cashflow_df['period_end']).dt.strftime('%Y-%m-%d')
+        except Exception as e:
+            logger.warning(f"Error formatting dates: {e}")
+            # If already strings, just extract first 10 chars (YYYY-MM-DD)
+            cashflow_df['period_start'] = cashflow_df['period_start'].apply(lambda x: str(x)[:10] if x else '')
+            cashflow_df['period_end'] = cashflow_df['period_end'].apply(lambda x: str(x)[:10] if x else '')
     
     scenarios_comparison = pd.DataFrame(snapshot['scenarios_comparison'])
     
     # Get current report (v2 if refined, else v1)
     current_report = snapshot.get('report_v2') or snapshot.get('report_v1')
     
+    # Prepare events_df for drill-down (if available)
+    events_df = None
+    if 'events_df' in snapshot and snapshot['events_df'] is not None:
+        try:
+            events_df = pd.DataFrame(snapshot['events_df'])
+        except:
+            logger.warning("Could not load events_df for drill-down")
+    
     return render_template(
         'results.html',
         snapshot=snapshot,
         cashflow=cashflow_df.to_dict('records'),
         scenarios_comparison=scenarios_comparison.to_dict('records'),
-        current_report=current_report
+        current_report=current_report,
+        events_available=events_df is not None
     )
 
 
@@ -520,6 +659,42 @@ def history():
     user_id = session.get('user', {}).get('user_id')
     snapshots = list_snapshots(user_id)
     return render_template('history.html', snapshots=snapshots)
+
+
+@app.route('/delete/<snapshot_id>', methods=['POST'])
+@login_required
+def delete_analysis(snapshot_id):
+    """Delete analysis from history"""
+    try:
+        user_id = session.get('user', {}).get('user_id')
+        
+        # Determine file path
+        if user_id:
+            snapshot_file = os.path.join('data', 'history', user_id, f'{snapshot_id}.json')
+            index_file = os.path.join('data', 'history', user_id, 'index.json')
+        else:
+            snapshot_file = os.path.join('data', 'history', f'{snapshot_id}.json')
+            index_file = os.path.join('data', 'history', 'index.json')
+        
+        # Delete snapshot file
+        if os.path.exists(snapshot_file):
+            os.remove(snapshot_file)
+            logger.info(f"Deleted snapshot: {snapshot_id}")
+        
+        # Update index
+        if os.path.exists(index_file):
+            with open(index_file, 'r', encoding='utf-8') as f:
+                index = json.load(f)
+            index['snapshots'] = [s for s in index['snapshots'] if s['snapshot_id'] != snapshot_id]
+            with open(index_file, 'w', encoding='utf-8') as f:
+                json.dump(index, f, indent=2, ensure_ascii=False)
+        
+        flash('Análisis eliminado correctamente', 'success')
+    except Exception as e:
+        logger.error(f"Error deleting analysis: {e}")
+        flash(f'Error al eliminar análisis: {str(e)}', 'error')
+    
+    return redirect(url_for('history'))
 
 
 @app.route('/help')
@@ -680,4 +855,5 @@ if __name__ == '__main__':
     logger.info(f"Starting Copiloto de Supervivencia Financiera on port {port}")
     logger.info(f"Debug mode: {debug}")
     
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    # Run with verbose error output
+    app.run(host='0.0.0.0', port=port, debug=debug, use_reloader=False, threaded=True)

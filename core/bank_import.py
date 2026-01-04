@@ -11,7 +11,8 @@ logger = logging.getLogger(__name__)
 
 def parse_bank_file(file) -> Tuple[pd.DataFrame, List[str]]:
     """
-    Parse bank statement from CSV or Excel
+    Parse bank statement from CSV or Excel with ROBUST error handling
+    Handles Spanish formats: commas as decimals, various date formats
     Returns: (normalized_df, warnings)
     
     Expected columns (flexible naming):
@@ -25,9 +26,20 @@ def parse_bank_file(file) -> Tuple[pd.DataFrame, List[str]]:
     """
     warnings = []
     
+    if file is None:
+        raise ValueError("No se proporcionó archivo bancario")
+    
     try:
         # Read file with multiple attempts
-        filename = file.filename.lower()
+        # Handle both Flask FileStorage and regular file objects
+        if hasattr(file, 'filename'):
+            filename = file.filename.lower()
+        elif hasattr(file, 'name'):
+            filename = file.name.lower()
+        else:
+            # Assume CSV if we can't determine
+            filename = 'unknown.csv'
+        
         df = None
         
         if filename.endswith('.csv'):
@@ -142,14 +154,27 @@ def parse_bank_file(file) -> Tuple[pd.DataFrame, List[str]]:
             warnings.append(f"⚠️ {invalid_dates} fechas inválidas eliminadas")
             df = df[df['date'].notna()]
         
-        # Parse amounts
+        # Parse amounts (handle Spanish format: 1.234,56)
+        def clean_amount(x):
+            """Convert Spanish number format to float"""
+            if pd.isna(x):
+                return None
+            x_str = str(x).strip().replace(' ', '')
+            # Spanish format: 1.234,56 or 1234,56
+            if ',' in x_str:
+                x_str = x_str.replace('.', '').replace(',', '.')
+            try:
+                return float(x_str)
+            except:
+                return None
+        
         if amount_col:
             # Single amount column
-            df['amount'] = pd.to_numeric(df[amount_col], errors='coerce')
+            df['amount'] = df[amount_col].apply(clean_amount)
         elif debit_col and credit_col:
             # Separate debit/credit columns
-            df['debit'] = pd.to_numeric(df[debit_col], errors='coerce').fillna(0)
-            df['credit'] = pd.to_numeric(df[credit_col], errors='coerce').fillna(0)
+            df['debit'] = df[debit_col].apply(clean_amount).fillna(0)
+            df['credit'] = df[credit_col].apply(clean_amount).fillna(0)
             df['amount'] = df['credit'] - df['debit']
         else:
             warnings.append("⚠️ No se encontraron columnas de importes")

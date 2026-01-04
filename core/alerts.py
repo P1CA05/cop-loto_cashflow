@@ -42,42 +42,44 @@ def generate_alerts(kpis: Dict, survival: Dict, cashflow_df, quality_metrics: Di
                 'recommended_action': 'Subir archivos de facturas emitidas y recibidas para mejorar escenarios futuros'
             })
     
-    # 1. Negative balance alert
+    # 1. Negative balance alert - SIMPLIFICADO Y CLARO
     if kpis['min_balance'] < 0:
         alerts.append({
             'severity': 'high',
-            'title': 'Riesgo de Saldo Negativo',
-            'message': f"El saldo caerá por debajo de 0€ llegando a {kpis['min_balance']:.2f}€ "
-                      f"aproximadamente el {kpis['min_balance_date']}",
-            'evidence': f"KPI: min_balance = {kpis['min_balance']:.2f}€",
-            'recommended_action': 'Asegurar financiación inmediata o posponer pagos grandes'
+            'title': '🚨 ¡ALERTA CRÍTICA! Tu cuenta llegará a números rojos',
+            'message': f"Tu saldo bancario caerá a **{kpis['min_balance']:.0f}€** (negativo) alrededor del **{kpis['min_balance_date']}**. "
+                      f"Esto significa que no tendrás dinero suficiente para pagar todo lo que tienes pendiente.",
+            'evidence': f"Saldo mínimo proyectado: {kpis['min_balance']:.0f}€",
+            'recommended_action': '💡 **ACCIÓN URGENTE**: Necesitas conseguir financiación YA o posponer pagos grandes hasta que entren más ingresos. '
+                                 'Habla con tu banco sobre ampliar tu línea de crédito o negocia plazos de pago con proveedores.'
         })
     
-    # 2. Safety threshold breach
+    # 2. Safety threshold breach - EXPLICACIÓN SENCILLA
     safety_threshold = survival.get('safety_threshold', 0)
     if kpis['min_balance'] > 0 and kpis['min_balance'] < safety_threshold:
         alerts.append({
             'severity': 'medium',
-            'title': 'Brecha del Umbral de Seguridad',
-            'message': f"El saldo caerá por debajo del umbral de seguridad ({safety_threshold:.2f}€) "
-                      f"llegando a {kpis['min_balance']:.2f}€",
-            'evidence': f"KPI: min_balance = {kpis['min_balance']:.2f}€, threshold = {safety_threshold:.2f}€",
-            'recommended_action': 'Revisar gastos no críticos y priorizar cobros'
+            'title': '⚠️ Tu colchón de seguridad se agotará pronto',
+            'message': f"Tu saldo bajará a **{kpis['min_balance']:.0f}€**, que está por debajo de tu colchón de seguridad de **{safety_threshold:.0f}€**. "
+                      f"Aunque no llegarás a números rojos, estarás en una zona de riesgo.",
+            'evidence': f"Saldo mínimo: {kpis['min_balance']:.0f}€ | Colchón recomendado: {safety_threshold:.0f}€",
+            'recommended_action': '💡 **RECOMENDACIÓN**: Revisa tus gastos no urgentes (¿puedes posponer algo?) y acelera el cobro de facturas pendientes.'
         })
     
-    # 3. Short runway alert
+    # 3. Short runway alert - ANALOGÍA COMPRENSIBLE
     if kpis['runway_weeks'] < 12:  # Less than 3 months
         alerts.append({
             'severity': 'high',
-            'title': 'Pista de Aterrizaje Corta',
-            'message': f"Solo {kpis['runway_weeks']} semanas antes de posible déficit",
-            'evidence': f"KPI: runway_weeks = {kpis['runway_weeks']}",
-            'recommended_action': 'Acelerar cobros pendientes y reducir gastos no esenciales urgentemente'
+            'title': '⏰ Tiempo limitado: solo tienes {:.0f} semanas de margen'.format(kpis['runway_weeks']),
+            'message': f"Si sigues gastando al ritmo actual, en **{kpis['runway_weeks']:.0f} semanas** podrías tener problemas de liquidez. "
+                      f"Es como si tu depósito de gasolina solo te durara {kpis['runway_weeks']:.0f} semanas más.",
+            'evidence': f"Semanas de supervivencia: {kpis['runway_weeks']:.0f}",
+            'recommended_action': '💡 **URGENTE**: Acelera el cobro de facturas pendientes, reduce gastos no esenciales y considera opciones de financiación.'
         })
     elif kpis['runway_weeks'] < 24:  # Less than 6 months
         alerts.append({
             'severity': 'medium',
-            'title': 'Runway Limitado',
+            'title': '🕐 Margen justo: {:.0f} semanas de autonomía'.format(kpis['runway_weeks']),
             'message': f"Aproximadamente {kpis['runway_weeks']} semanas de margen antes de problemas",
             'evidence': f"KPI: runway_weeks = {kpis['runway_weeks']}",
             'recommended_action': 'Comenzar a buscar opciones de financiación y optimizar cobros'

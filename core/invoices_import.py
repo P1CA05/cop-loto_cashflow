@@ -40,7 +40,14 @@ def _parse_invoices(file, invoice_type: str) -> Tuple[pd.DataFrame, List[str]]:
     
     try:
         # Read file with multiple attempts
-        filename = file.filename.lower()
+        # Handle both Flask FileStorage and regular file objects
+        if hasattr(file, 'filename'):
+            filename = file.filename.lower()
+        elif hasattr(file, 'name'):
+            filename = file.name.lower()
+        else:
+            filename = 'unknown.csv'
+        
         df = None
         
         if filename.endswith('.csv'):

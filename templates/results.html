@@ -5,230 +5,503 @@
 {% block content %}
 <div class="results-page">
     
-    <!-- Header with Confidence -->
-    <div class="results-header">
-        <h2>📊 Análisis de Supervivencia Completado</h2>
-        <div class="confidence-badge">
-            <div class="badge confidence-{{ snapshot.confidence_level }}">
-                Confianza: {{ snapshot.confidence_level | upper }}
+    <!-- Header with Version Badge -->
+    <div class="results-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+        <h2 style="margin: 0 0 1rem 0; font-size: 2rem;">📊 Tu Análisis Financiero 
+            {% if snapshot.revision > 1 %}
+                <span style="background: rgba(255,255,255,0.2); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.9rem;">v{{ snapshot.revision }}</span>
+            {% endif %}
+        </h2>
+        <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+            <div class="badge confidence-{{ snapshot.confidence_level }}" style="font-size: 1.1rem; padding: 0.5rem 1.5rem;">
+                {{ snapshot.confidence_level | upper }}
             </div>
-            <div class="coverage-info">
-                Cobertura: {{ "%.1f" | format(snapshot.coverage_months) }} meses
+            <div class="coverage-info" style="font-size: 1rem; opacity: 0.95;">
+                📅 Cobertura: {{ "%.1f" | format(snapshot.coverage_months) }} meses
             </div>
-        </div>
-        <p class="analysis-date">Generado: {{ snapshot.created_at }}</p>
-    </div>
-
-    <!-- Data Limitations Section -->
-    <div class="limitations-section">
-        <h4>📋 Alcance y Limitaciones de Este Análisis</h4>
-        <div class="limitations-grid">
-            <div class="limitation-item">
-                <strong>Cobertura de datos:</strong>
-                <span>{{ "%.1f" | format(snapshot.coverage_months) }} meses de extracto bancario</span>
-                {% if snapshot.coverage_months < 3 %}
-                    <p class="limitation-note">⚠️ Con menos de 3 meses no podemos identificar patrones estacionales ni tendencias fiables.</p>
-                {% elif snapshot.coverage_months < 6 %}
-                    <p class="limitation-note">ℹ️ Con 3-6 meses tenemos una vista parcial. Recomendamos al menos 6 meses para mayor precisión.</p>
-                {% else %}
-                    <p class="limitation-note positive">✅ Cobertura suficiente para identificar patrones y tendencias.</p>
-                {% endif %}
-            </div>
-            
-            <div class="limitation-item">
-                <strong>Datos futuros:</strong>
-                {% if snapshot.quality_metrics.has_future_collections or snapshot.quality_metrics.has_future_payments %}
-                    <span>✅ Incluye facturas pendientes</span>
-                    <p class="limitation-note positive">Los escenarios conservador y optimista son más precisos.</p>
-                {% else %}
-                    <span>⚠️ Sin facturas pendientes</span>
-                    <p class="limitation-note">Los escenarios futuros se basan solo en histórico. Sube facturas pendientes para mayor precisión.</p>
-                {% endif %}
-            </div>
-            
-            <div class="limitation-item">
-                <strong>Nivel de confianza:</strong>
-                <span class="confidence-{{ snapshot.confidence_level }}">{{ snapshot.confidence_level | upper }}</span>
-                {% if snapshot.confidence_level == 'low' %}
-                    <p class="limitation-note">⚠️ Recomendamos añadir más meses de extracto y facturas pendientes para mejorar precisión.</p>
-                {% elif snapshot.confidence_level == 'medium' %}
-                    <p class="limitation-note">ℹ️ Análisis útil pero mejorable. Considera añadir facturas pendientes para mayor detalle.</p>
-                {% else %}
-                    <p class="limitation-note positive">✅ Análisis fiable con datos suficientes.</p>
-                {% endif %}
-            </div>
-            
-            <div class="limitation-item">
-                <strong>Qué NO incluye este análisis:</strong>
-                <ul class="limitations-list">
-                    <li>Proyectos en negociación (solo incluye facturas emitidas)</li>
-                    <li>Cambios futuros en estructura de costes</li>
-                    <li>Eventos excepcionales no reflejados en datos</li>
-                    <li>Acceso automático a cuentas bancarias (datos manuales)</li>
-                </ul>
+            <div style="font-size: 0.9rem; opacity: 0.9; margin-left: auto;">
+                {{ snapshot.created_at[:16].replace('T', ' ') }}
             </div>
         </div>
     </div>
 
-    <!-- Warnings (if any) -->
-    {% if snapshot.warnings %}
-    <div class="warnings-section">
-        <h4>⚠️ Avisos de Calidad de Datos</h4>
-        <ul class="warnings-list">
-            {% for warning in snapshot.warnings[:5] %}
-                <li>{{ warning }}</li>
-            {% endfor %}
-        </ul>
+    <!-- NUEVO: RESUMEN EJECUTIVO ULTRA-CLARO -->
+    {% if snapshot.executive_summary %}
+    <div class="executive-summary" style="background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%); border-radius: 15px; padding: 2.5rem; margin-bottom: 2.5rem; box-shadow: 0 6px 20px rgba(253,203,110,0.4); border-left: 6px solid #e17055;">
+        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;">
+            <span style="font-size: 3.5rem;">🎯</span>
+            <div>
+                <h2 style="margin: 0; color: #2d3436; font-size: 1.8rem;">Resumen Ejecutivo</h2>
+                <p style="margin: 0.3rem 0 0 0; color: #636e72; font-size: 1rem;">Lo que necesitas saber AHORA</p>
+            </div>
+        </div>
+
+        <!-- Status Cards Row -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">
+                    {% if snapshot.executive_summary.status == 'high' %}🔴
+                    {% elif snapshot.executive_summary.status == 'medium' %}🟡
+                    {% else %}🟢{% endif %}
+                </div>
+                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem; margin-bottom: 0.3rem;">Estado Global</div>
+                <div style="color: 
+                    {% if snapshot.executive_summary.status == 'high' %}#d63031
+                    {% elif snapshot.executive_summary.status == 'medium' %}#fdcb6e
+                    {% else %}#00b894{% endif %}; font-weight: bold; font-size: 1.3rem;">
+                    {{ snapshot.executive_summary.status_explanation }}
+                </div>
+            </div>
+
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">⏰</div>
+                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem; margin-bottom: 0.3rem;">Autonomía</div>
+                <div style="color: #0984e3; font-weight: bold; font-size: 2rem;">{{ snapshot.executive_summary.runway_weeks }}</div>
+                <div style="color: #636e72; font-size: 0.9rem;">semanas (≈ {{ snapshot.executive_summary.runway_months }} meses)</div>
+            </div>
+
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">
+                    {% if snapshot.executive_summary.min_balance < 0 %}⚠️{% else %}💰{% endif %}
+                </div>
+                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem; margin-bottom: 0.3rem;">Saldo Mínimo</div>
+                <div style="color: {% if snapshot.executive_summary.min_balance < 0 %}#d63031{% else %}#00b894{% endif %}; font-weight: bold; font-size: 1.6rem;">
+                    {{ "%.0f" | format(snapshot.executive_summary.min_balance) }}€
+                </div>
+                <div style="color: #636e72; font-size: 0.85rem;">{{ snapshot.executive_summary.min_balance_date }}</div>
+            </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div style="background: rgba(255,255,255,0.7); padding: 1.8rem; border-radius: 12px; margin-bottom: 1.5rem;">
+            <div style="display: grid; gap: 1.5rem;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem;">
+                        <span style="background: #d63031; color: white; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: bold; font-size: 0.85rem;">HOY</span>
+                        <span style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">Acción Prioritaria</span>
+                    </div>
+                    <p style="margin: 0; color: #2d3436; font-size: 1.05rem; line-height: 1.6;">{{ snapshot.executive_summary.action_today }}</p>
+                </div>
+
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 0.8rem;">
+                        <span style="background: #fdcb6e; color: #2d3436; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: bold; font-size: 0.85rem;">ESTA SEMANA</span>
+                        <span style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">Siguiente Paso</span>
+                    </div>
+                    <p style="margin: 0; color: #2d3436; font-size: 1.05rem; line-height: 1.6;">{{ snapshot.executive_summary.action_week }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Missing Data Section -->
+        {% if snapshot.executive_summary.missing_data %}
+        <div style="background: rgba(255,255,255,0.5); padding: 1.3rem; border-radius: 10px; border: 2px dashed #fdcb6e;">
+            <div style="font-weight: bold; color: #e17055; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span style="font-size: 1.3rem;">📊</span> 
+                <span style="font-size: 1.05rem;">Datos que mejorarían la precisión del análisis:</span>
+            </div>
+            <ul style="margin: 0; padding-left: 1.5rem; color: #2d3436;">
+                {% for item in snapshot.executive_summary.missing_data %}
+                <li style="margin: 0.4rem 0;">{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <!-- Confidence Note -->
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.6); border-radius: 8px; border-left: 4px solid #0984e3;">
+            <p style="margin: 0; color: #2d3436; font-size: 0.95rem;">
+                <strong>📈 Nivel de Confianza:</strong> {{ snapshot.executive_summary.confidence_note }}
+            </p>
+        </div>
     </div>
     {% endif %}
 
-    <!-- Executive Summary Cards -->
-    <div class="summary-cards">
-        <div class="card card-balance">
-            <h4>💰 Saldo Mínimo</h4>
-            <div class="card-value {% if snapshot.kpis.min_balance < 0 %}negative{% endif %}">
-                {{ "%.2f" | format(snapshot.kpis.min_balance) }}€
+    <!-- MEJORADO: Data Quality Warnings with Impact -->
+    {% if snapshot.warnings %}
+    <div style="background: #fff4e6; border: 2px solid #ffa94d; border-radius: 12px; padding: 1.8rem; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.2rem;">
+            <span style="font-size: 2.5rem;">⚠️</span>
+            <div>
+                <h4 style="margin: 0; color: #d35400; font-size: 1.3rem;">Avisos sobre Calidad de Datos</h4>
+                <p style="margin: 0.3rem 0 0 0; color: #e67e22; font-size: 0.95rem;">Detectamos algunas limitaciones en los datos procesados</p>
             </div>
-            <small>Fecha: {{ snapshot.kpis.min_balance_date }}</small>
         </div>
 
-        <div class="card card-risk">
-            <h4>🚦 Nivel de Riesgo</h4>
-            <div class="card-value risk-{{ snapshot.kpis.risk_level }}">
+        <div style="display: grid; gap: 1rem;">
+            {% for warning in snapshot.warnings %}
+            <div style="background: white; padding: 1.2rem; border-radius: 8px; border-left: 4px solid #f39c12;">
+                <div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; flex-wrap: wrap;">
+                    <div style="flex: 1;">
+                        <div style="color: #2d3436; font-size: 1rem; margin-bottom: 0.5rem;">{{ warning }}</div>
+                        {% if 'eliminad' in warning.lower() %}
+                            {% set count_str = warning.split()[0] %}
+                            {% if count_str.isdigit() %}
+                                {% set count = count_str | int %}
+                                <div style="color: #636e72; font-size: 0.85rem; margin-top: 0.5rem;">
+                                    <strong>Impacto:</strong> 
+                                    {% if count < 5 %}
+                                        <span style="color: #00b894;">🟢 Bajo</span> - Probablemente errores de formato menores
+                                    {% elif count < 20 %}
+                                        <span style="color: #fdcb6e;">🟡 Medio</span> - Revisar formato del archivo
+                                    {% else %}
+                                        <span style="color: #d63031;">🔴 Alto</span> - Puede afectar significativamente las proyecciones
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    
+                    {% if 'eliminad' in warning.lower() or 'ignorad' in warning.lower() %}
+                    <div style="background: #fdcb6e; color: #2d3436; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: bold; font-size: 0.85rem; white-space: nowrap;">
+                        ⚠️ REVISAR
+                    </div>
+                    {% else %}
+                    <div style="background: #74b9ff; color: white; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: bold; font-size: 0.85rem; white-space: nowrap;">
+                        ℹ️ INFO
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="background: rgba(255,255,255,0.7); padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px dashed #f39c12;">
+            <p style="margin: 0; color: #856404; font-size: 0.9rem;">
+                <strong>💡 Recomendación:</strong> Si hay muchos datos eliminados, revisa el formato de tus archivos. 
+                Asegúrate de que las fechas estén en formato DD/MM/YYYY y los importes usen punto o coma como separador decimal.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+
+    <!-- Summary Cards Grid -->
+    <div class="summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="card card-balance" style="background: {% if snapshot.kpis.min_balance < 0 %}#fee;{% else %}#e8f5e9;{% endif %} border-left: 4px solid {% if snapshot.kpis.min_balance < 0 %}#d32f2f;{% else %}#4caf50;{% endif %} padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 2rem;">💰</span>
+                <h4 style="margin: 0; color: #333;">Saldo Mínimo</h4>
+            </div>
+            <div class="card-value" style="font-size: 2.5rem; font-weight: bold; color: {% if snapshot.kpis.min_balance < 0 %}#d32f2f;{% else %}#2e7d32;{% endif %}">
+                {{ "%.0f" | format(snapshot.kpis.min_balance) }}€
+            </div>
+            <small style="color: #666; font-size: 0.9rem;">📅 {{ snapshot.kpis.min_balance_date }}</small>
+        </div>
+
+        <div class="card card-risk" style="background: {% if snapshot.kpis.risk_level == 'high' %}#ffebee;{% elif snapshot.kpis.risk_level == 'medium' %}#fff3e0;{% else %}#e3f2fd;{% endif %} border-left: 4px solid {% if snapshot.kpis.risk_level == 'high' %}#c62828;{% elif snapshot.kpis.risk_level == 'medium' %}#ef6c00;{% else %}#1565c0;{% endif %} padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 2rem;">🚦</span>
+                <h4 style="margin: 0; color: #333;">Nivel de Riesgo</h4>
+            </div>
+            <div class="card-value" style="font-size: 2rem; font-weight: bold; color: {% if snapshot.kpis.risk_level == 'high' %}#c62828;{% elif snapshot.kpis.risk_level == 'medium' %}#ef6c00;{% else %}#1565c0;{% endif %}">
                 {{ snapshot.kpis.risk_level | upper }}
             </div>
-            <small>Runway: {{ snapshot.kpis.runway_weeks }} semanas</small>
+            <small style="color: #666; font-size: 0.9rem;">⏰ {{ snapshot.kpis.runway_weeks }} semanas</small>
         </div>
 
-        <div class="card card-capital">
-            <h4>💵 Capital Necesario</h4>
-            <div class="card-value">
-                {{ "%.2f" | format(snapshot.survival.capital_total_needed) }}€
+        <div class="card card-capital" style="background: #fff3e0; border-left: 4px solid #f57c00; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 2rem;">💵</span>
+                <h4 style="margin: 0; color: #333;">Capital Necesario</h4>
             </div>
-            <small>Para {{ snapshot.inputs.horizon_months }} meses</small>
+            <div class="card-value" style="font-size: 2.5rem; font-weight: bold; color: #e65100;">
+                {{ "%.0f" | format(snapshot.survival.capital_total_needed) }}€
+            </div>
+            <small style="color: #666; font-size: 0.9rem;">Para {{ snapshot.inputs.horizon_months }} meses</small>
         </div>
 
-        <div class="card card-bridge">
-            <h4>🌉 Financiación Puente</h4>
-            <div class="card-value">
-                {{ "%.2f" | format(snapshot.survival.financiacion_puente_needed) }}€
+        <div class="card card-bridge" style="background: {% if snapshot.survival.credit_gap > 0 %}#ffebee;{% else %}#e8f5e9;{% endif %} border-left: 4px solid {% if snapshot.survival.credit_gap > 0 %}#c62828;{% else %}#4caf50;{% endif %} padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                <span style="font-size: 2rem;">🌉</span>
+                <h4 style="margin: 0; color: #333;">Fin. Puente</h4>
+            </div>
+            <div class="card-value" style="font-size: 2.5rem; font-weight: bold; color: {% if snapshot.survival.credit_gap > 0 %}#c62828;{% else %}#2e7d32;{% endif %}">
+                {{ "%.0f" | format(snapshot.survival.financiacion_puente_needed) }}€
             </div>
             {% if snapshot.survival.credit_gap > 0 %}
-                <small class="negative">❌ Falta: {{ "%.2f" | format(snapshot.survival.credit_gap) }}€</small>
+                <small style="color: #c62828; font-weight: bold;">❌ Falta: {{ "%.0f" | format(snapshot.survival.credit_gap) }}€</small>
             {% else %}
-                <small class="positive">✅ Suficiente</small>
+                <small style="color: #2e7d32;">✅ Suficiente</small>
             {% endif %}
         </div>
     </div>
 
-    <!-- Cashflow Table -->
+    <!-- NUEVO: Capital Breakdown Explained -->
+    {% if snapshot.capital_breakdown %}
+    <div class="section" style="background: #f7f9fc; border: 2px solid #dfe6e9; border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
+        <h3 style="color: #2d3436; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem;">
+            <span style="font-size: 1.8rem;">💰</span> Desglose del Capital Necesario
+            <span style="background: #74b9ff; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.75rem; font-weight: bold;">EXPLICADO</span>
+        </h3>
+        
+        <div style="display: grid; gap: 1.5rem;">
+            <!-- Deficit Max -->
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #e74c3c;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="color: #2d3436; font-size: 1.1rem;">1️⃣ Déficit Máximo Acumulado</strong>
+                    <span style="font-size: 1.5rem; font-weight: bold; color: #e74c3c;">{{ "%.0f" | format(snapshot.capital_breakdown.deficit_max) }}€</span>
+                </div>
+                <p style="margin: 0; color: #636e72; font-size: 0.95rem;">{{ snapshot.capital_breakdown.deficit_explanation }}</p>
+            </div>
+
+            <!-- Buffer -->
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #f39c12;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="color: #2d3436; font-size: 1.1rem;">2️⃣ Buffer de Seguridad</strong>
+                    <span style="font-size: 1.5rem; font-weight: bold; color: #f39c12;">{{ "%.0f" | format(snapshot.capital_breakdown.buffer) }}€</span>
+                </div>
+                <p style="margin: 0; color: #636e72; font-size: 0.95rem;">{{ snapshot.capital_breakdown.buffer_explanation }}</p>
+            </div>
+
+            <!-- Total -->
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; border: 2px solid #3498db; box-shadow: 0 3px 12px rgba(52,152,219,0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <strong style="color: #2d3436; font-size: 1.2rem;">💎 Capital Total Necesario</strong>
+                    <span style="font-size: 1.8rem; font-weight: bold; color: #3498db;">{{ "%.0f" | format(snapshot.capital_breakdown.capital_total) }}€</span>
+                </div>
+                <p style="margin: 0; color: #636e72; font-size: 0.95rem;">{{ snapshot.capital_breakdown.capital_total_explanation }}</p>
+            </div>
+
+            <!-- Breakdown: Propio vs Financiación -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div style="background: #d4edda; padding: 1.3rem; border-radius: 8px; border-left: 4px solid #28a745;">
+                    <div style="font-weight: bold; color: #155724; margin-bottom: 0.5rem;">Tu Aporte (Capital Propio)</div>
+                    <div style="font-size: 1.6rem; font-weight: bold; color: #155724;">{{ "%.0f" | format(snapshot.capital_breakdown.capital_propio) }}€</div>
+                    <small style="color: #155724; font-size: 0.85rem;">{{ snapshot.capital_breakdown.capital_propio_explanation }}</small>
+                </div>
+                
+                <div style="background: #fff3cd; padding: 1.3rem; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <div style="font-weight: bold; color: #856404; margin-bottom: 0.5rem;">A Financiar (Préstamo/Crédito)</div>
+                    <div style="font-size: 1.6rem; font-weight: bold; color: #856404;">{{ "%.0f" | format(snapshot.capital_breakdown.financiacion) }}€</div>
+                    <small style="color: #856404; font-size: 0.85rem;">{{ snapshot.capital_breakdown.financiacion_explanation }}</small>
+                </div>
+            </div>
+
+            <!-- Credit Line Usage & Cost -->
+            {% if snapshot.capital_breakdown.credit_max_usage > 0 %}
+            <div style="background: #e8f4f8; padding: 1.5rem; border-radius: 10px; border-left: 4px solid #17a2b8;">
+                <strong style="color: #0c5460; font-size: 1.1rem; display: block; margin-bottom: 1rem;">💳 Uso de Línea de Crédito</strong>
+                <div style="display: grid; gap: 0.8rem;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #0c5460;">Uso máximo estimado:</span>
+                        <strong style="color: #17a2b8; font-size: 1.2rem;">{{ "%.0f" | format(snapshot.capital_breakdown.credit_max_usage) }}€</strong>
+                    </div>
+                    {% if snapshot.capital_breakdown.monthly_interest > 0 %}
+                    <div style="background: white; padding: 1rem; border-radius: 6px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <span style="color: #636e72;">Coste mensual:</span>
+                            <strong style="color: #e74c3c;">{{ "%.0f" | format(snapshot.capital_breakdown.monthly_interest) }}€/mes</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #636e72;">Coste total estimado:</span>
+                            <strong style="color: #e74c3c;">{{ "%.0f" | format(snapshot.capital_breakdown.total_interest) }}€</strong>
+                        </div>
+                        <small style="color: #95a5a6; display: block; margin-top: 0.5rem;">{{ snapshot.capital_breakdown.interest_explanation }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if snapshot.capital_breakdown.credit_gap > 0 %}
+            <div style="background: #f8d7da; padding: 1.3rem; border-radius: 8px; border: 2px solid #f5c6cb;">
+                <strong style="color: #721c24; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <span style="font-size: 1.3rem;">⚠️</span> BRECHA DE FINANCIACIÓN
+                </strong>
+                <p style="margin: 0; color: #721c24; font-size: 1rem;">
+                    Tu línea de crédito actual es insuficiente. 
+                    <strong style="font-size: 1.2rem;">Te faltan {{ "%.0f" | format(snapshot.capital_breakdown.credit_gap) }}€</strong> de capacidad de financiación.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- MEJORADO: Cashflow Table with Filters (MINIMIZADO por defecto) -->
     <div class="section">
-        <h3>💹 Proyección de Cashflow</h3>
-        <div class="table-container">
-            <table class="cashflow-table">
-                <thead>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="margin: 0;">💹 Proyección de Cashflow</h3>
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="toggleMovement" onchange="filterCashflow()" style="width: 18px; height: 18px;">
+                    <span style="font-size: 0.95rem;">Solo con movimiento</span>
+                </label>
+            </div>
+        </div>
+        
+        <div style="border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden;">
+            <table class="cashflow-table" id="cashflowTable" style="width: 100%;">
+                <thead style="position: sticky; top: 0; background: var(--accent-primary); color: white; z-index: 10;">
                     <tr>
-                        <th>Período</th>
-                        <th>Ingresos</th>
-                        <th>Pagos</th>
-                        <th>Neto</th>
-                        <th>Balance</th>
+                        <th style="padding: 12px;">Período</th>
+                        <th style="padding: 12px;">Ingresos</th>
+                        <th style="padding: 12px;">Pagos</th>
+                        <th style="padding: 12px;">Neto</th>
+                        <th style="padding: 12px;">Balance</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for row in cashflow[:20] %}
-                    <tr {% if row.balance < 0 %}class="negative-balance"{% elif row.below_safety %}class="warning-balance"{% endif %}>
-                        <td>{{ row.period_start[:10] }}</td>
-                        <td class="positive">+{{ "%.2f" | format(row.inflows) }}€</td>
-                        <td class="negative">-{{ "%.2f" | format(row.outflows) }}€</td>
-                        <td {% if row.net < 0 %}class="negative"{% else %}class="positive"{% endif %}>
+                <tbody id="cashflowTableBody">
+                    {% for row in cashflow %}
+                    <tr data-inflows="{{ row.inflows }}" 
+                        data-outflows="{{ row.outflows }}" 
+                        data-row-index="{{ loop.index0 }}"
+                        class="cashflow-row{% if loop.index0 >= 10 %} hidden-row{% endif %}"
+                        {% if row.balance < 0 %}data-balance-status="negative"
+                        {% elif row.below_safety %}data-balance-status="warning"
+                        {% endif %}
+                        style="{% if loop.index0 % 2 == 0 %}background: var(--bg-card-secondary);{% endif %} {% if loop.index0 >= 10 %}display: none;{% endif %}">
+                        <td style="padding: 12px;"><strong>{{ row.period_start }}</strong></td>
+                        <td class="positive" style="padding: 12px;">+{{ "%.2f" | format(row.inflows) }}€</td>
+                        <td class="negative" style="padding: 12px;">-{{ "%.2f" | format(row.outflows) }}€</td>
+                        <td {% if row.net < 0 %}class="negative"{% else %}class="positive"{% endif %} style="font-weight: bold; padding: 12px;">
                             {{ "%.2f" | format(row.net) }}€
                         </td>
-                        <td class="balance-cell">{{ "%.2f" | format(row.balance) }}€</td>
+                        <td class="balance-cell" style="font-weight: bold; font-size: 1.05rem; padding: 12px;">{{ "%.2f" | format(row.balance) }}€</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        {% if cashflow|length > 20 %}
-            <p class="table-note">Mostrando primeros 20 períodos de {{ cashflow|length }} totales</p>
-        {% endif %}
-    </div>
-
-    <!-- Survival Analysis -->
-    <div class="section survival-section">
-        <h3>🎯 Análisis de Supervivencia ({{ snapshot.inputs.horizon_months }} meses)</h3>
-        <div class="survival-grid">
-            <div class="survival-item">
-                <strong>Déficit Proyectado:</strong>
-                <span class="{% if snapshot.survival.deficit > 0 %}negative{% endif %}">
-                    {{ "%.2f" | format(snapshot.survival.deficit) }}€
-                </span>
-            </div>
-            <div class="survival-item">
-                <strong>Buffer Estructural Recomendado:</strong>
-                <span>{{ "%.2f" | format(snapshot.survival.structural_buffer) }}€</span>
-            </div>
-            <div class="survival-item">
-                <strong>Capital Propio Sugerido:</strong>
-                <span>{{ "%.2f" | format(snapshot.survival.capital_propio_recommended) }}€</span>
-            </div>
-            <div class="survival-item">
-                <strong>Financiación Puente Necesaria:</strong>
-                <span>{{ "%.2f" | format(snapshot.survival.financiacion_puente_needed) }}€</span>
-            </div>
-            
-            {% if snapshot.survival.credit_line_total > 0 %}
-            <div class="survival-item">
-                <strong>Línea de Crédito Disponible:</strong>
-                <span>{{ "%.2f" | format(snapshot.survival.credit_available) }}€</span>
-            </div>
-            <div class="survival-item">
-                <strong>¿Suficiente?:</strong>
-                <span class="{% if snapshot.survival.credit_sufficient %}positive{% else %}negative{% endif %}">
-                    {{ "SÍ ✓" if snapshot.survival.credit_sufficient else "NO ✗" }}
-                </span>
-            </div>
-            
-            {% if snapshot.survival.credit_gap > 0 %}
-            <div class="survival-item gap-warning">
-                <strong>⚠️ BRECHA DE FINANCIACIÓN:</strong>
-                <span class="negative">{{ "%.2f" | format(snapshot.survival.credit_gap) }}€</span>
-            </div>
-            {% endif %}
-            {% endif %}
+        
+        <div style="margin-top: 1rem; text-align: center;">
+            <button onclick="toggleCashflowExpansion()" id="expandCashflowBtn" class="btn btn-primary" style="padding: 0.8rem 1.5rem; font-size: 1rem;">
+                📊 Ver Proyección Completa ({{ cashflow|length }} períodos)
+            </button>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;" id="cashflowHint">
+                Mostrando 10 de {{ cashflow|length }} períodos
+            </p>
         </div>
     </div>
 
-    <!-- Scenarios Comparison -->
+    <script>
+    let cashflowExpanded = false;
+    
+    function toggleCashflowExpansion() {
+        const rows = document.querySelectorAll('.cashflow-row');
+        const btn = document.getElementById('expandCashflowBtn');
+        const hint = document.getElementById('cashflowHint');
+        const totalRows = rows.length;
+        
+        cashflowExpanded = !cashflowExpanded;
+        
+        if (cashflowExpanded) {
+            // Mostrar TODAS las filas
+            rows.forEach(row => {
+                row.style.display = '';
+            });
+            btn.innerHTML = '📕 Minimizar Proyección';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-secondary');
+            hint.textContent = `Mostrando ${totalRows} de ${totalRows} períodos`;
+        } else {
+            // Mostrar SOLO primeras 10
+            rows.forEach((row, index) => {
+                if (index >= 10) {
+                    row.style.display = 'none';
+                } else {
+                    row.style.display = '';
+                }
+            });
+            btn.innerHTML = '📊 Ver Proyección Completa (' + totalRows + ' períodos)';
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary');
+            hint.textContent = `Mostrando 10 de ${totalRows} períodos`;
+        }
+    }
+    
+    function filterCashflow() {
+        const checkbox = document.getElementById('toggleMovement');
+        const rows = document.querySelectorAll('.cashflow-row');
+        
+        rows.forEach((row, index) => {
+            const inflows = parseFloat(row.dataset.inflows) || 0;
+            const outflows = parseFloat(row.dataset.outflows) || 0;
+            const hasMovement = Math.abs(inflows) >= 1 || Math.abs(outflows) >= 1;
+            
+            if (checkbox.checked) {
+                if (!hasMovement) {
+                    row.style.display = 'none';
+                } else if (!cashflowExpanded && index >= 10) {
+                    row.style.display = 'none';
+                } else {
+                    row.style.display = '';
+                }
+            } else {
+                if (!cashflowExpanded && index >= 10) {
+                    row.style.display = 'none';
+                } else {
+                    row.style.display = '';
+                }
+            }
+        });
+    }
+    </script>
+
+    <!-- MEJORADO: Scenarios with Explanations -->
     <div class="section">
-        <h3>🔮 Comparación de Escenarios</h3>
+        <h3 style="margin-bottom: 1.5rem;">🔮 Comparación de Escenarios</h3>
+        
+        {% if snapshot.scenario_explanations %}
+        <div style="background: #eef2f7; padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem; border-left: 4px solid #5f27cd;">
+            <h4 style="color: #341f97; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span>ℹ️</span> ¿Qué Cambia en Cada Escenario?
+            </h4>
+            
+            <div style="display: grid; gap: 1rem;">
+                <div style="background: white; padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #2d3436;">⚪ Base:</strong> 
+                    <span style="color: #636e72;">{{ snapshot.scenario_explanations.base_assumptions }}</span>
+                </div>
+                
+                <div style="background: white; padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #d63031;">🔴 Conservador:</strong> 
+                    <span style="color: #636e72;">{{ snapshot.scenario_explanations.conservative_changes }}</span>
+                </div>
+                
+                <div style="background: white; padding: 1rem; border-radius: 8px;">
+                    <strong style="color: #00b894;">🟢 Optimista:</strong> 
+                    <span style="color: #636e72;">{{ snapshot.scenario_explanations.optimistic_changes }}</span>
+                </div>
+            </div>
+            
+            {% if not snapshot.scenario_explanations.are_different %}
+            <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 2px dashed #ffc107;">
+                <p style="margin: 0; color: #856404;">
+                    <strong>ℹ️ Nota:</strong> {{ snapshot.scenario_explanations.explanation }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <div class="table-container">
             <table class="scenarios-table">
-                <thead>
+                <thead style="position: sticky; top: 0; background: #5f27cd; color: white; z-index: 10;">
                     <tr>
                         <th>Escenario</th>
                         <th>Saldo Mín.</th>
                         <th>Riesgo</th>
                         <th>Runway</th>
-                        <th>Capital Necesario</th>
+                        <th>Capital</th>
                         <th>Fin. Puente</th>
                         <th>Brecha</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for scenario in scenarios_comparison %}
-                    <tr>
+                    <tr style="{% if loop.index0 % 2 == 0 %}background: #f8f9fa;{% endif %}">
                         <td><strong>{{ scenario.scenario }}</strong></td>
-                        <td class="{% if scenario.min_balance < 0 %}negative{% endif %}">
-                            {{ "%.2f" | format(scenario.min_balance) }}€
+                        <td class="{% if scenario.min_balance < 0 %}negative{% endif %}" style="font-weight: bold;">
+                            {{ "%.0f" | format(scenario.min_balance) }}€
                         </td>
-                        <td class="risk-{{ scenario.risk_level }}">{{ scenario.risk_level | upper }}</td>
+                        <td class="risk-{{ scenario.risk_level }}" style="font-weight: bold;">{{ scenario.risk_level | upper }}</td>
                         <td>{{ scenario.runway_weeks }}s</td>
-                        <td>{{ "%.2f" | format(scenario.capital_needed) }}€</td>
-                        <td>{{ "%.2f" | format(scenario.bridge_financing) }}€</td>
-                        <td class="{% if scenario.credit_gap > 0 %}negative{% endif %}">
-                            {{ "%.2f" | format(scenario.credit_gap) }}€
+                        <td>{{ "%.0f" | format(scenario.capital_needed) }}€</td>
+                        <td>{{ "%.0f" | format(scenario.bridge_financing) }}€</td>
+                        <td class="{% if scenario.credit_gap > 0 %}negative{% endif %}" style="font-weight: bold;">
+                            {{ "%.0f" | format(scenario.credit_gap) }}€
                         </td>
                     </tr>
                     {% endfor %}
@@ -237,142 +510,450 @@
         </div>
     </div>
 
-    <!-- Alerts -->
+    </div>
+
+    <!-- MEJORADO: Alerts with Enhanced Display -->
     <div class="section">
-        <h3>🚨 Alertas Detectadas</h3>
+        <h3 style="margin-bottom: 1.5rem;">🚨 Alertas Detectadas</h3>
         {% if snapshot.alerts %}
-            <div class="alerts-list">
+            <div class="alerts-list" style="display: grid; gap: 1.5rem;">
                 {% for alert in snapshot.alerts %}
-                <div class="alert-item severity-{{ alert.severity }}">
-                    <div class="alert-header">
-                        <span class="alert-badge">{{ alert.severity | upper }}</span>
-                        <h4>{{ alert.title }}</h4>
+                <div class="alert-item severity-{{ alert.severity }}" style="
+                    background: {% if alert.severity == 'high' %}#ffebee{% elif alert.severity == 'medium' %}#fff3e0{% else %}#e8f5e9{% endif %};
+                    border-left: 6px solid {% if alert.severity == 'high' %}#d32f2f{% elif alert.severity == 'medium' %}#f57c00{% else %}#388e3c{% endif %};
+                    padding: 1.5rem;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                        <h4 style="margin: 0; color: #2d3436; font-size: 1.2rem; flex: 1;">{{ alert.title }}</h4>
+                        <span style="
+                            background: {% if alert.severity == 'high' %}#d32f2f{% elif alert.severity == 'medium' %}#f57c00{% else %}#388e3c{% endif %};
+                            color: white;
+                            padding: 0.4rem 1rem;
+                            border-radius: 20px;
+                            font-weight: bold;
+                            font-size: 0.85rem;">
+                            {{ alert.severity | upper }}
+                        </span>
                     </div>
-                    <p class="alert-message">{{ alert.message }}</p>
-                    <p class="alert-evidence"><em>Evidencia: {{ alert.evidence }}</em></p>
-                    <p class="alert-action"><strong>→ Acción recomendada:</strong> {{ alert.recommended_action }}</p>
+                    
+                    <p style="margin: 0 0 1rem 0; color: #2d3436; font-size: 1.05rem; line-height: 1.6;">{{ alert.message }}</p>
+                    
+                    <div style="background: rgba(255,255,255,0.7); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                        <strong style="color: #636e72; font-size: 0.9rem;">📊 Evidencia:</strong>
+                        <p style="margin: 0.3rem 0 0 0; color: #636e72; font-size: 0.95rem;">{{ alert.evidence }}</p>
+                    </div>
+                    
+                    <div style="background: {% if alert.severity == 'high' %}#fce4ec{% elif alert.severity == 'medium' %}#fff8e1{% else %}#f1f8e9{% endif %}; padding: 1.2rem; border-radius: 8px; border: 2px solid {% if alert.severity == 'high' %}#f06292{% elif alert.severity == 'medium' %}#ffb74d{% else %}#aed581{% endif %};">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            <span style="font-size: 1.3rem;">💡</span>
+                            <strong style="color: #2d3436; font-size: 1.05rem;">Acción Recomendada:</strong>
+                        </div>
+                        <p style="margin: 0; color: #2d3436; font-size: 1rem; line-height: 1.6;">{{ alert.recommended_action }}</p>
+                    </div>
+                    
+                    {% if events_available %}
+                    <details style="margin-top: 1rem;">
+                        <summary style="cursor: pointer; color: #0984e3; font-weight: 600; padding: 0.5rem; background: rgba(9,132,227,0.1); border-radius: 6px;">
+                            🔍 Ver transacciones relacionadas (drill-down)
+                        </summary>
+                        <div style="margin-top: 0.8rem; padding: 1rem; background: white; border-radius: 6px; font-size: 0.9rem;">
+                            <em style="color: #636e72;">Funcionalidad de drill-down en desarrollo. Mostrará las transacciones específicas que causaron esta alerta.</em>
+                        </div>
+                    </details>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="no-alerts">✅ No se detectaron alertas críticas en este momento.</p>
+            <div style="background: #d4edda; border: 2px solid #c3e6cb; padding: 2rem; border-radius: 10px; text-align: center;">
+                <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">✅</span>
+                <p style="margin: 0; color: #155724; font-size: 1.2rem; font-weight: 600;">No se detectaron alertas críticas</p>
+                <p style="margin: 0.5rem 0 0 0; color: #155724;">Tu situación financiera proyectada está dentro de parámetros saludables.</p>
+            </div>
         {% endif %}
     </div>
 
-    <!-- Action Plan -->
+    <!-- MEJORADO: Action Plan with Interactive Checklist -->
     <div class="section">
-        <h3>📋 Plan de Acción Priorizado</h3>
+        <h3 style="margin-bottom: 1.5rem;">📋 Plan de Acción Priorizado</h3>
         
-        <div class="action-plan">
-            <div class="action-timeframe">
-                <h4>🔴 Inmediato (48 horas)</h4>
-                <ul>
+        <div style="display: grid; gap: 2rem;">
+            <!-- Immediate 48h -->
+            <div style="background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); padding: 2rem; border-radius: 12px; border-left: 6px solid #d32f2f; box-shadow: 0 3px 10px rgba(211,47,47,0.2);">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                    <span style="font-size: 2.5rem;">🔴</span>
+                    <div>
+                        <h4 style="margin: 0; color: #b71c1c; font-size: 1.4rem;">Inmediato (48 horas)</h4>
+                        <p style="margin: 0.3rem 0 0 0; color: #c62828; font-size: 0.95rem;">Acciones urgentes que no pueden esperar</p>
+                    </div>
+                </div>
+                
+                {% if snapshot.action_plan.immediate_48h %}
                     {% for action in snapshot.action_plan.immediate_48h %}
-                    <li>
-                        <strong>{{ action.action }}</strong>
-                        <br><small>Razón: {{ action.reason }}</small>
-                    </li>
+                    <div style="background: white; padding: 1.2rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #d32f2f;">
+                        <label style="display: flex; gap: 1rem; cursor: pointer; align-items: start;">
+                            <input type="checkbox" style="margin-top: 0.3rem; width: 20px; height: 20px; flex-shrink: 0;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: bold; color: #2d3436; font-size: 1.05rem; margin-bottom: 0.5rem;">{{ action.action }}</div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; color: #636e72; font-size: 0.9rem;">
+                                    <span style="font-weight: 600;">💡 Por qué:</span>
+                                    <span>{{ action.reason }}</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
                     {% endfor %}
-                </ul>
+                {% else %}
+                    <p style="color: #c62828; font-style: italic; margin: 0;">No hay acciones urgentes detectadas.</p>
+                {% endif %}
             </div>
 
-            <div class="action-timeframe">
-                <h4>🟡 Corto Plazo (7-14 días)</h4>
-                <ul>
+            <!-- Short term 7-14d -->
+            <div style="background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); padding: 2rem; border-radius: 12px; border-left: 6px solid #f57c00; box-shadow: 0 3px 10px rgba(245,124,0,0.2);">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                    <span style="font-size: 2.5rem;">🟡</span>
+                    <div>
+                        <h4 style="margin: 0; color: #e65100; font-size: 1.4rem;">Corto Plazo (7-14 días)</h4>
+                        <p style="margin: 0.3rem 0 0 0; color: #f57c00; font-size: 0.95rem;">Acciones importantes para esta semana y la próxima</p>
+                    </div>
+                </div>
+                
+                {% if snapshot.action_plan.short_term_7_14d %}
                     {% for action in snapshot.action_plan.short_term_7_14d %}
-                    <li>
-                        <strong>{{ action.action }}</strong>
-                        <br><small>Razón: {{ action.reason }}</small>
-                    </li>
+                    <div style="background: white; padding: 1.2rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #f57c00;">
+                        <label style="display: flex; gap: 1rem; cursor: pointer; align-items: start;">
+                            <input type="checkbox" style="margin-top: 0.3rem; width: 20px; height: 20px; flex-shrink: 0;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: bold; color: #2d3436; font-size: 1.05rem; margin-bottom: 0.5rem;">{{ action.action }}</div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; color: #636e72; font-size: 0.9rem;">
+                                    <span style="font-weight: 600;">💡 Por qué:</span>
+                                    <span>{{ action.reason }}</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
                     {% endfor %}
-                </ul>
+                {% else %}
+                    <p style="color: #e65100; font-style: italic; margin: 0;">No hay acciones a corto plazo.</p>
+                {% endif %}
             </div>
 
-            <div class="action-timeframe">
-                <h4>🟢 Mediano Plazo (30-90 días)</h4>
-                <ul>
+            <!-- Medium term 30-90d -->
+            <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); padding: 2rem; border-radius: 12px; border-left: 6px solid #388e3c; box-shadow: 0 3px 10px rgba(56,142,60,0.2);">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                    <span style="font-size: 2.5rem;">🟢</span>
+                    <div>
+                        <h4 style="margin: 0; color: #1b5e20; font-size: 1.4rem;">Mediano Plazo (30-90 días)</h4>
+                        <p style="margin: 0.3rem 0 0 0; color: #388e3c; font-size: 0.95rem;">Mejoras estructurales y planificación a futuro</p>
+                    </div>
+                </div>
+                
+                {% if snapshot.action_plan.medium_term_30_90d %}
                     {% for action in snapshot.action_plan.medium_term_30_90d %}
-                    <li>
-                        <strong>{{ action.action }}</strong>
-                        <br><small>Razón: {{ action.reason }}</small>
-                    </li>
+                    <div style="background: white; padding: 1.2rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #388e3c;">
+                        <label style="display: flex; gap: 1rem; cursor: pointer; align-items: start;">
+                            <input type="checkbox" style="margin-top: 0.3rem; width: 20px; height: 20px; flex-shrink: 0;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: bold; color: #2d3436; font-size: 1.05rem; margin-bottom: 0.5rem;">{{ action.action }}</div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; color: #636e72; font-size: 0.9rem;">
+                                    <span style="font-weight: 600;">💡 Por qué:</span>
+                                    <span>{{ action.reason }}</span>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
                     {% endfor %}
-                </ul>
+                {% else %}
+                    <p style="color: #1b5e20; font-style: italic; margin: 0;">No hay acciones a mediano plazo.</p>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- LLM Report -->
+    <!-- MEJORADO: LLM Report in Memo Format with Copy Button -->
     <div class="section report-section">
-        <h3>📄 Informe Ejecutivo
-            {% if snapshot.report_source == 'llm' %}
-                <span class="badge badge-llm">Generado con IA</span>
-            {% else %}
-                <span class="badge badge-rules">Análisis Rules-Based</span>
-            {% endif %}
-        </h3>
-        <div class="report-content markdown-content">
-            {{ current_report | safe }}
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+            <h3 style="margin: 0;">📄 Informe Ejecutivo
+                {% if snapshot.report_source == 'llm' %}
+                    <span style="background: #667eea; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">IA</span>
+                {% else %}
+                    <span style="background: #6c757d; color: white; padding: 0.3rem 0.8rem; border-radius: 15px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">RULES-BASED</span>
+                {% endif %}
+            </h3>
+            <div style="display: flex; gap: 0.8rem;">
+                <button onclick="toggleFullReport()" style="background: #74b9ff; color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                    <span id="toggleIcon">📖</span> <span id="toggleText">Ver Completo</span>
+                </button>
+                <button onclick="copyReport()" style="background: #00b894; color: white; padding: 0.6rem 1.2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                    📋 Copiar
+                </button>
+            </div>
+        </div>
+
+        <!-- Memo Format Summary (Always Visible) -->
+        <div id="memoSummary" style="background: white; padding: 2rem; border-radius: 12px; border: 2px solid #dfe6e9; margin-bottom: 1.5rem;">
+            <div style="border-bottom: 2px solid #dfe6e9; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+                <div style="color: #636e72; font-size: 0.9rem; margin-bottom: 0.3rem;">MEMORÁNDUM EJECUTIVO</div>
+                <div style="font-weight: bold; color: #2d3436; font-size: 1.1rem;">Análisis Financiero - {{ snapshot.created_at[:10] }}</div>
+            </div>
+
+            <!-- Extract key bullets from report (simplified version) -->
+            <div style="display: grid; gap: 1.5rem;">
+                <div>
+                    <div style="background: #dfe6e9; padding: 0.5rem 1rem; border-radius: 6px; display: inline-block; margin-bottom: 0.8rem; font-weight: bold; color: #2d3436;">
+                        📊 SITUACIÓN
+                    </div>
+                    <ul style="margin: 0; padding-left: 1.5rem; color: #2d3436; line-height: 1.8;">
+                        <li>Saldo mínimo proyectado: <strong>{{ "%.0f" | format(snapshot.kpis.min_balance) }}€</strong> ({{ snapshot.kpis.min_balance_date }})</li>
+                        <li>Nivel de riesgo: <strong style="color: {% if snapshot.kpis.risk_level == 'high' %}#d63031{% elif snapshot.kpis.risk_level == 'medium' %}#f39c12{% else %}#00b894{% endif %}">{{ snapshot.kpis.risk_level | upper }}</strong></li>
+                        <li>Autonomía financiera: <strong>{{ snapshot.kpis.runway_weeks }} semanas</strong> (≈ {{ (snapshot.kpis.runway_weeks / 4.33) | round(1) }} meses)</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <div style="background: #fab1a0; padding: 0.5rem 1rem; border-radius: 6px; display: inline-block; margin-bottom: 0.8rem; font-weight: bold; color: #2d3436;">
+                        ⚠️ RIESGOS
+                    </div>
+                    <ul style="margin: 0; padding-left: 1.5rem; color: #2d3436; line-height: 1.8;">
+                        {% if snapshot.alerts %}
+                            {% for alert in snapshot.alerts[:3] %}
+                            <li>{{ alert.title }}</li>
+                            {% endfor %}
+                            {% if snapshot.alerts|length > 3 %}
+                            <li><em>+ {{ snapshot.alerts|length - 3 }} alertas adicionales</em></li>
+                            {% endif %}
+                        {% else %}
+                            <li>✅ Sin riesgos críticos detectados</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div>
+                    <div style="background: #a29bfe; padding: 0.5rem 1rem; border-radius: 6px; display: inline-block; margin-bottom: 0.8rem; font-weight: bold; color: white;">
+                        🎯 ACCIONES PRIORITARIAS
+                    </div>
+                    <ul style="margin: 0; padding-left: 1.5rem; color: #2d3436; line-height: 1.8;">
+                        {% if snapshot.action_plan.immediate_48h %}
+                            {% for action in snapshot.action_plan.immediate_48h[:3] %}
+                            <li>{{ action.action }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li>✅ Mantener seguimiento regular del cashflow</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Report (Collapsible) -->
+        <div id="fullReport" style="display: none;">
+            <div style="background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%); padding: 3rem; border-radius: 16px; border: 2px solid #e0e7ff; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);">
+                <div style="border-bottom: 3px solid #667eea; padding-bottom: 1rem; margin-bottom: 2.5rem;">
+                    <div style="color: #667eea; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.5rem;">📊 Informe Detallado</div>
+                    <h2 style="margin: 0; color: #2d3436; font-size: 1.8rem; font-weight: 700;">Análisis Completo de Cashflow</h2>
+                </div>
+                
+                <div id="reportContent" class="report-content" style="color: #2d3436; font-size: 1.05rem;">
+                    {{ current_report | format_report | safe }}
+                </div>
+            </div>
         </div>
     </div>
+
+    <script>
+    function toggleFullReport() {
+        const fullReport = document.getElementById('fullReport');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const toggleText = document.getElementById('toggleText');
+        
+        if (fullReport.style.display === 'none') {
+            fullReport.style.display = 'block';
+            // Smooth scroll to report
+            setTimeout(() => {
+                fullReport.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+            toggleIcon.textContent = '📕';
+            toggleText.textContent = 'Ver Resumen';
+        } else {
+            fullReport.style.display = 'none';
+            toggleIcon.textContent = '📖';
+            toggleText.textContent = 'Ver Completo';
+        }
+    }
+
+    function copyReport() {
+        const memoText = document.getElementById('memoSummary').innerText;
+        const fullText = document.getElementById('fullReport').innerText;
+        const textToCopy = memoText + '\n\n--- INFORME COMPLETO ---\n\n' + fullText;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '✅ Copiado';
+            btn.style.background = '#00b894';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '#00b894';
+            }, 2000);
+        }).catch(err => {
+            alert('Error al copiar: ' + err);
+        });
+    }
+    </script>
+
+    <!-- Mostrar si hubo refinamiento (NUEVO) -->
+    {% if snapshot.refine_answers and snapshot.refine_answers|length > 0 and snapshot.revision > 1 %}
+    <div style="background: #fff9e6; border: 2px solid #ffd93d; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <span style="font-size: 2rem;">🔄</span>
+            <div>
+                <h4 style="margin: 0; color: #2d3436; font-size: 1.2rem;">Análisis Refinado con Tus Respuestas</h4>
+                <p style="margin: 0.3rem 0 0 0; color: #636e72; font-size: 0.95rem;">Este es el informe v{{ snapshot.revision }} personalizado según tu contexto</p>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 1.2rem; border-radius: 8px; margin-bottom: 1rem;">
+            <strong style="color: #2d3436; display: block; margin-bottom: 0.8rem;">📝 Contexto Proporcionado:</strong>
+            <div style="display: grid; gap: 0.6rem; color: #636e72; font-size: 0.95rem;">
+                {% if snapshot.refine_answers.priorities %}
+                <div><strong>Prioridades:</strong> {{ snapshot.refine_answers.priorities | join(', ') }}</div>
+                {% endif %}
+                {% if snapshot.refine_answers.timing %}
+                <div><strong>Timing de cobros:</strong> {{ snapshot.refine_answers.timing }}</div>
+                {% endif %}
+                {% if snapshot.refine_answers.control %}
+                <div><strong>Control financiero:</strong> {{ snapshot.refine_answers.control }}</div>
+                {% endif %}
+                {% if snapshot.refine_answers.upcoming_cashflows %}
+                <div><strong>Movimientos futuros:</strong> {{ snapshot.refine_answers.upcoming_cashflows }}</div>
+                {% endif %}
+                {% if snapshot.refine_answers.can_renegotiate %}
+                <div><strong>Puede renegociar con proveedores:</strong> {{ snapshot.refine_answers.can_renegotiate }}</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="background: #e8f4f8; padding: 1rem; border-radius: 6px; border-left: 4px solid #0984e3;">
+            <p style="margin: 0; color: #0c5460; font-size: 0.95rem;">
+                <strong>ℹ️ Importante:</strong> Los números del análisis (cashflow, capital necesario, etc.) NO cambiaron. 
+                Solo se ajustaron las recomendaciones y el enfoque del informe para adaptarse mejor a tu situación.
+            </p>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Guided Questions (Post-Analysis) -->
-    <div class="section refine-section">
-        <h3>🎯 Refinar Recomendaciones</h3>
-        <p>Responde estas preguntas para personalizar el informe (sin cambiar números):</p>
+            Cuéntanos un poco más sobre tu situación. Esto nos ayudará a darte recomendaciones más ajustadas a tu realidad. 
+            <span style="color: #718096; font-style: italic;">(Los números no cambiarán, solo las sugerencias 😉)</span>
+        </p>
         
         <form action="{{ url_for('refine', snapshot_id=snapshot.snapshot_id) }}" method="post" class="refine-form">
             
-            <div class="form-group">
-                <label><strong>¿Cuáles son tus prioridades actuales? (selecciona todas las que apliquen)</strong></label>
-                <div class="checkbox-grid">
-                    <label><input type="checkbox" name="priorities" value="supervivencia"> Supervivencia inmediata</label>
-                    <label><input type="checkbox" name="priorities" value="crecimiento"> Crecimiento</label>
-                    <label><input type="checkbox" name="priorities" value="estabilidad"> Estabilidad financiera</label>
-                    <label><input type="checkbox" name="priorities" value="reducir_deuda"> Reducir deuda</label>
+            <div class="form-group" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #4299e1;">
+                <label style="color: #2d3748; font-size: 16px; font-weight: 600; display: block; margin-bottom: 12px;">
+                    🎯 ¿Qué es lo más importante para ti ahora mismo?
+                </label>
+                <p style="color: #718096; font-size: 14px; margin-bottom: 12px;">Puedes marcar varias opciones</p>
+                <div class="checkbox-grid" style="display: grid; gap: 10px;">
+                    <label style="display: flex; align-items: center; padding: 10px; border-radius: 5px; cursor: pointer; transition: background 0.2s;">
+                        <input type="checkbox" name="priorities" value="supervivencia" style="margin-right: 10px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;">🚨 <strong>Sobrevivir</strong> - Llegar a fin de mes sin apuros</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 10px; border-radius: 5px; cursor: pointer; transition: background 0.2s;">
+                        <input type="checkbox" name="priorities" value="crecimiento" style="margin-right: 10px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;">📈 <strong>Crecer</strong> - Invertir y expandir el negocio</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 10px; border-radius: 5px; cursor: pointer; transition: background 0.2s;">
+                        <input type="checkbox" name="priorities" value="estabilidad" style="margin-right: 10px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;">⚖️ <strong>Estabilizar</strong> - Tener tranquilidad financiera</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 10px; border-radius: 5px; cursor: pointer; transition: background 0.2s;">
+                        <input type="checkbox" name="priorities" value="reducir_deuda" style="margin-right: 10px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;">💳 <strong>Reducir deudas</strong> - Bajar préstamos y créditos</span>
+                    </label>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label><strong>¿Cómo ves el timing de tus cobros?</strong></label>
-                <select name="timing">
-                    <option value="">Selecciona...</option>
-                    <option value="puntual">Clientes pagan puntualmente</option>
-                    <option value="retrasos_leves">Retrasos leves habituales (+7-15 días)</option>
-                    <option value="retrasos_graves">Retrasos graves habituales (+30 días o más)</option>
-                    <option value="impredecible">Muy impredecible</option>
+            <div class="form-group" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #48bb78;">
+                <label style="color: #2d3748; font-size: 16px; font-weight: 600; display: block; margin-bottom: 12px;">
+                    ⏰ ¿Cómo te pagan tus clientes normalmente?
+                </label>
+                <p style="color: #718096; font-size: 14px; margin-bottom: 12px;">Esto nos ayuda a saber si tus proyecciones son realistas</p>
+                <select name="timing" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 15px; color: #2d3748; background: white;">
+                    <option value="">👉 Selecciona una opción...</option>
+                    <option value="puntual">✅ A tiempo - Me pagan en las fechas acordadas</option>
+                    <option value="retrasos_leves">🟡 Con pequeños retrasos (1-2 semanas tarde)</option>
+                    <option value="retrasos_graves">🔴 Con retrasos grandes (más de 1 mes tarde)</option>
+                    <option value="impredecible">🎲 Es un caos - Nunca sé cuándo cobro</option>
                 </select>
             </div>
 
-            <div class="form-group">
-                <label><strong>¿Cuánto control sientes sobre tus flujos de caja?</strong></label>
-                <div class="radio-group">
-                    <label><input type="radio" name="control" value="alto"> Alto control</label>
-                    <label><input type="radio" name="control" value="medio"> Control medio</label>
-                    <label><input type="radio" name="control" value="bajo"> Bajo control</label>
+            <div class="form-group" style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #ed8936;">
+                <label style="color: #2d3748; font-size: 16px; font-weight: 600; display: block; margin-bottom: 12px;">
+                    🎮 ¿Qué tanto control tienes sobre tu dinero?
+                </label>
+                <p style="color: #718096; font-size: 14px; margin-bottom: 12px;">¿Puedes predecir cuándo entra y sale dinero?</p>
+                <div class="radio-group" style="display: grid; gap: 10px;">
+                    <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="control" value="alto" style="margin-right: 12px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;"><strong>💪 Alto</strong> - Sé exactamente qué va a pasar</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="control" value="medio" style="margin-right: 12px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;"><strong>🤷 Medio</strong> - Tengo una idea general</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="control" value="bajo" style="margin-right: 12px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;"><strong>😰 Bajo</strong> - Es impredecible, me estresa</span>
+                    </label>
                 </div>
             </div>
 
             {% if snapshot.kpis.risk_level == 'high' %}
-            <div class="form-group">
-                <label><strong>¿Hay cobros o pagos grandes próximos no reflejados en los datos?</strong></label>
-                <textarea name="upcoming_cashflows" rows="3" 
-                          placeholder="ej. 'Cobro de 20k€ esperado en 15 días, pago de impuestos de 10k€ en 30 días'"></textarea>
+            <div class="form-group" style="background: #fff5f5; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #f56565;">
+                <label style="color: #c53030; font-size: 16px; font-weight: 600; display: block; margin-bottom: 12px;">
+                    🔮 ¿Viene algo grande que no vemos en los datos?
+                </label>
+                <p style="color: #742a2a; font-size: 14px; margin-bottom: 12px;">
+                    Si esperas cobros importantes o tienes que hacer pagos grandes pronto, cuéntanos aquí
+                </p>
+                <textarea name="upcoming_cashflows" rows="4" 
+                          style="width: 100%; padding: 12px; border: 2px solid #fc8181; border-radius: 8px; font-size: 15px; color: #2d3748; font-family: inherit;"
+                          placeholder="Por ejemplo: 'Mi cliente grande me paga 15.000€ en 2 semanas' o 'Tengo que pagar 8.000€ de impuestos el día 20'"></textarea>
             </div>
             {% endif %}
 
             {% if snapshot.survival.financiacion_puente_needed > 0 %}
-            <div class="form-group">
-                <label><strong>¿Puedes renegociar términos de pago con proveedores?</strong></label>
-                <div class="radio-group">
-                    <label><input type="radio" name="can_renegotiate" value="si"> Sí</label>
-                    <label><input type="radio" name="can_renegotiate" value="no"> No</label>
-                    <label><input type="radio" name="can_renegotiate" value="algunos"> Algunos</label>
+            <div class="form-group" style="background: #fffaf0; padding: 20px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #ed8936;">
+                <label style="color: #c05621; font-size: 16px; font-weight: 600; display: block; margin-bottom: 12px;">
+                    🤝 ¿Podrías hablar con tus proveedores para pagar más tarde?
+                </label>
+                <p style="color: #7c2d12; font-size: 14px; margin-bottom: 12px;">
+                    A veces negociar 15-30 días extra marca la diferencia
+                </p>
+                <div class="radio-group" style="display: grid; gap: 10px;">
+                    <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #fbd38d; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="can_renegotiate" value="si" style="margin-right: 12px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;"><strong>✅ Sí</strong> - Tengo buena relación con ellos</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #fbd38d; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="can_renegotiate" value="no" style="margin-right: 12px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;"><strong>❌ No</strong> - Es complicado o imposible</span>
+                    </label>
+                    <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #fbd38d; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="can_renegotiate" value="algunos" style="margin-right: 12px; width: 18px; height: 18px;"> 
+                        <span style="color: #2d3748;"><strong>🔄 Algunos</strong> - Con algunos sí, con otros no</span>
+                    </label>
                 </div>
             </div>
             {% endif %}
 
-            <button type="submit" class="btn btn-secondary">🔄 Actualizar Informe con Mis Respuestas</button>
+            <button type="submit" class="btn btn-secondary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);">
+                🚀 Actualizar Mis Recomendaciones
+            </button>
         </form>
     </div>
 

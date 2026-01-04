@@ -1,4 +1,5 @@
 // Copiloto de Supervivencia Financiera - JavaScript
+console.log("✅ app.js loaded");
 
 document.addEventListener('DOMContentLoaded', function() {
     

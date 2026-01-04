@@ -33,7 +33,14 @@ def validate_file(file, allowed_extensions: list = None) -> Tuple[bool, Optional
         return False, "No se proporcionó archivo"
     
     if allowed_extensions:
-        filename = file.filename.lower()
+        # Handle both Flask FileStorage and regular file objects
+        if hasattr(file, 'filename'):
+            filename = file.filename.lower()
+        elif hasattr(file, 'name'):
+            filename = file.name.lower()
+        else:
+            return False, "No se pudo determinar el nombre del archivo"
+            
         if not any(filename.endswith(ext) for ext in allowed_extensions):
             return False, f"Formato no válido. Permitido: {', '.join(allowed_extensions)}"
     
